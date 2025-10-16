@@ -1,21 +1,19 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Exercice de Clavier</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <title>Exercice de frappe - Accueil</title>
+  <link rel="stylesheet" href="asset/css/accueil.css" />
 </head>
 <body>
   <div class="container">
-    <h1>Exercice de frappe</h1>
-    <p id="phrase-cible">Appuyez sur "Commencer" pour voir une phrase.</p>
-    
-    <textarea id="zone-saisie" placeholder="Tapez ici..." disabled></textarea>
-    <div id="feedback"></div>
-    
-    <button id="demarrer">Commencer</button>
-  </div>
+    <h1>Exercice de frappe au clavier</h1>
 
-  <script src="quizz.js"></script>
+    <div id="menu-principal">
+      <button onclick="window.location.href='training.html'">Entraînement</button>
+      <br>
+      <button onclick="alert('Mode Évaluation pas encore implémenté.')">Évaluation</button>
+    </div>
+  </div>
 </body>
 </html>

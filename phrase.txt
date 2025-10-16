@@ -1,0 +1,6 @@
+Bonjour, comment ça va ?
+L'élève a bien réussi l'examen !
+C'est l'été : il fait chaud & ensoleillé
+Appuyez sur le bouton ROUGE
+Étudiez bien l'HTML, le CSS & le JavaScript
+Il a dit : « Je viendrai demain »

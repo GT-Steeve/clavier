@@ -1,20 +1,34 @@
-const phrases = [
-  "Bonjour, comment ça va ?",
-  "L'élève a bien réussi l'examen !",
-  "C'est l'été : il fait chaud & ensoleillé",
-  "Appuyez sur le bouton ROUGE",
-  "Étudiez bien l'HTML, le CSS & le JavaScript",
-  "Il a dit : « Je viendrai demain »"
-];
-
 const phraseCible = document.getElementById('phrase-cible');
 const zoneSaisie = document.getElementById('zone-saisie');
 const feedback = document.getElementById('feedback');
 const boutonDemarrer = document.getElementById('demarrer');
 
+let phrases = [];
 let phraseActuelle = "";
 
+// Charger les phrases depuis le fichier texte
+fetch('phrases.txt')
+  .then(response => {
+    if (!response.ok) {
+      throw new Error("Impossible de charger le fichier de phrases.");
+    }
+    return response.text();
+  })
+  .then(data => {
+    // Découper le fichier par lignes et supprimer les lignes vides
+    phrases = data.split('\n').map(p => p.trim()).filter(p => p.length > 0);
+  })
+  .catch(error => {
+    phraseCible.textContent = "Erreur de chargement des phrases.";
+    console.error(error);
+  });
+
 boutonDemarrer.addEventListener('click', () => {
+  if (phrases.length === 0) {
+    phraseCible.textContent = "Aucune phrase disponible.";
+    return;
+  }
+
   phraseActuelle = phrases[Math.floor(Math.random() * phrases.length)];
   phraseCible.textContent = phraseActuelle;
   zoneSaisie.value = "";

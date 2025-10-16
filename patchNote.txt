@@ -1,1 +1,2 @@
 v0.00.0 = génération html, css, javascript
+v0.00.1 = essaie module phrase.txt

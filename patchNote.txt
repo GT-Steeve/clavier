@@ -2,3 +2,4 @@ v0.00.0 = génération html, css, javascript
 v0.00.1 = essaie module phrase.txt
 v0.00.2 = correction + ajoute readme.md
 v0.01.0 = explication entrainement
+v0.02.0 = valide une phrase correction pour accedez à la suivante

@@ -4,3 +4,4 @@ v0.00.2 = correction + ajoute readme.md
 v0.01.0 = explication entrainement
 v0.02.0 = valide une phrase correction pour accedez à la suivante
 v0.03.0 = Mode évaluation + refonte phrase
+v0.04.0 = Polish mode entrainement

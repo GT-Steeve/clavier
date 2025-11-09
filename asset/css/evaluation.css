@@ -1,0 +1,97 @@
+body {
+  font-family: Arial, sans-serif;
+  background-color: #eef2ff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
+.menu-retour {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+}
+
+#retour-menu {
+  text-decoration: none;
+  color: #555;
+  font-size: 0.9rem;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+#retour-menu:hover {
+  opacity: 1;
+}
+
+.container {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  margin-top: 60px;
+  width: 750px;           /* largeur fixe raisonnable */
+  min-height: 500px;      /* évite le “yoyo” vertical */
+  box-sizing: border-box;
+}
+
+.correct {
+  color: green;
+  font-weight: bold;
+}
+
+.incorrect {
+  color: red;
+  font-weight: bold;
+}
+
+button {
+  margin: 8px;
+  padding: 10px 15px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#demarrer {
+  background-color: #4e73df;
+  color: white;
+}
+
+#recommencer {
+  background-color: #20c997;
+  color: white;
+}
+
+#demarrer:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+textarea {
+  width: 90%;
+  height: 100px;
+  margin-top: 10px;
+  font-size: 1.1rem;
+}
+
+#progression-container {
+  width: 100%;
+  background: #e6e9ff;
+  border-radius: 6px;
+  margin: 10px auto;
+  height: 15px;
+  overflow: hidden;
+}
+
+#progression-bar {
+  height: 100%;
+  width: 0%;
+  background: #4e73df;
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}

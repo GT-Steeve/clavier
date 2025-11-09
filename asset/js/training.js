@@ -4,15 +4,16 @@ const feedback = document.getElementById('feedback');
 const boutonDemarrer = document.getElementById('demarrer');
 const boutonRecommencer = document.getElementById('recommencer');
 const progressBar = document.querySelector('.progress-bar');
+const phrasesRestantesDisplay = document.getElementById('phrases-restantes');
 
 let phrases = [];
 let phrasesRestantes = [];
 let phraseActuelle = "";
 let phraseTerminee = false;
 let compteur = 0;
-const maxPhrases = 2;
+const maxPhrases = 30;
 
-// Charger les phrases
+// Charger les phrases depuis le fichier texte
 fetch('./asset/phrases.txt')
   .then(response => {
     if (!response.ok) throw new Error("Impossible de charger le fichier de phrases.");
@@ -22,13 +23,20 @@ fetch('./asset/phrases.txt')
     phrases = data.split('\n').map(p => p.trim()).filter(p => p.length > 0);
     phrasesRestantes = [...phrases];
     boutonDemarrer.disabled = false;
+    majPhrasesRestantes();
   })
   .catch(error => {
     phraseCible.textContent = "Erreur de chargement des phrases.";
     console.error(error);
   });
 
-// Fonction pour afficher la phrase suivante
+// Met à jour l'affichage du nombre de phrases restantes
+function majPhrasesRestantes() {
+  const restantes = Math.min(maxPhrases - compteur, phrasesRestantes.length);
+  phrasesRestantesDisplay.textContent = `Phrases restantes : ${restantes}`;
+}
+
+// Afficher la phrase suivante
 function chargerPhrase() {
   if (compteur >= maxPhrases || phrasesRestantes.length === 0) {
     phraseCible.textContent = `Session terminée ! Vous avez vu ${compteur} phrase${compteur > 1 ? 's' : ''}.`;
@@ -36,6 +44,7 @@ function chargerPhrase() {
     boutonDemarrer.textContent = "Retour au menu";
     boutonDemarrer.disabled = false;
     progressBar.style.width = '100%';
+    phrasesRestantesDisplay.textContent = "Session terminée !";
     return;
   }
 
@@ -52,10 +61,12 @@ function chargerPhrase() {
   phraseTerminee = false;
   boutonDemarrer.textContent = "Commencer";
   boutonDemarrer.disabled = true;
-
   boutonRecommencer.style.display = "inline-block";
+
+  majPhrasesRestantes();
 }
 
+// Bouton démarrer / phrase suivante / retour menu
 boutonDemarrer.addEventListener('click', () => {
   if (phraseTerminee) {
     chargerPhrase();
@@ -66,6 +77,7 @@ boutonDemarrer.addEventListener('click', () => {
   }
 });
 
+// Zone de saisie
 zoneSaisie.addEventListener('input', () => {
   const saisie = zoneSaisie.value;
 
@@ -80,6 +92,8 @@ zoneSaisie.addEventListener('input', () => {
     compteur++;
     const pourcentage = (compteur / maxPhrases) * 100;
     progressBar.style.width = `${pourcentage}%`;
+
+    majPhrasesRestantes();
   } else if (phraseActuelle.startsWith(saisie)) {
     feedback.textContent = "Continue...";
     feedback.className = "";
@@ -89,6 +103,7 @@ zoneSaisie.addEventListener('input', () => {
   }
 });
 
+// Bouton recommencer
 boutonRecommencer.addEventListener('click', () => {
   phrasesRestantes = [...phrases];
   compteur = 0;

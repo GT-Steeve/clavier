@@ -40,7 +40,7 @@ let debutChrono = 0;
 let totalPhrases = 0;
 let phrasesCorrectes = 0;
 let totalTemps = 0;
-const MAX_PHRASES = 1;
+const MAX_PHRASES = 20;
 
 // Liste étendue à 50 phrases éducatives et bienveillantes
 const phrasesSpeciales = [

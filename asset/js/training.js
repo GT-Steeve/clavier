@@ -14,7 +14,7 @@ let compteur = 0;
 const maxPhrases = 30;
 
 // Charger les phrases depuis le fichier texte
-fetch('./asset/phrases.txt')
+fetch('./asset/phrases.txt', { headers: { 'Content-Type': 'text/plain; charset=UTF-8' } })
   .then(response => {
     if (!response.ok) throw new Error("Impossible de charger le fichier de phrases.");
     return response.text();

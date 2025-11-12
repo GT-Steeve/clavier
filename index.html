@@ -4,16 +4,29 @@
   <meta charset="UTF-8" />
   <title>Exercice de frappe - Accueil</title>
   <link rel="stylesheet" href="asset/css/accueil.css" />
+  <link rel="stylesheet" href="asset/css/popUp.css" />
 </head>
 <body>
   <div class="container">
     <h1>Exercice de frappe au clavier</h1>
 
     <div id="menu-principal">
-      <button onclick="window.location.href='training.html'">Entraînement</button>
+      <button id="btn-entrainement">Entraînement</button>
       <br>
-      <button onclick="window.location.href='evaluation.html'">Evaluation</button>
+      <button onclick="window.location.href='evaluation.html'">Évaluation</button>
     </div>
   </div>
+
+  <!-- Pop-up (modale) -->
+  <div id="popupEntrainement" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+      <h2>Choisissez votre type d'entraînement</h2>
+      <button onclick="window.location.href='training.html'">Phrases</button>
+      <button onclick="window.location.href='#'">Mots de passe</button>
+    </div>
+  </div>
+
+  <script src="asset/js/popUp.js"></script>
 </body>
 </html>

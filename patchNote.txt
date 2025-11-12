@@ -7,3 +7,4 @@ v0.03.0 = Mode évaluation + refonte phrase
 v0.04.0 = Polish mode entrainement
 v0.05.0 = correctif bug evaluation + mode entrainement
 v0.06.0 = pas de triche possible en désactive le copié/collé + correction bug des '
+v0.07.0 = Pop Up pour choisir l'exercice phrase où mot de passe

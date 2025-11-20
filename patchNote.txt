@@ -9,3 +9,4 @@ v0.05.0 = correctif bug evaluation + mode entrainement
 v0.06.0 = pas de triche possible en désactive le copié/collé + correction bug des '
 v0.07.0 = Pop Up pour choisir l'exercice phrase où mot de passe
 v0.08.0 = Entrainement avec des mots de passe incluant des caractère spéciaux
+v0.09.0 = Anticheat sur evaluation

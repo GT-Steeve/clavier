@@ -1,34 +1,22 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Exercice de frappe - Accueil</title>
-  <link rel="stylesheet" href="asset/css/accueil.css" />
-  <link rel="stylesheet" href="asset/css/popUp.css" />
+  <meta charset="UTF-8">
+  <title>Choisir un jeu</title>
+  <link rel="stylesheet" href="asset/css/galerie.css">
 </head>
 <body>
   <div class="container">
-    <h1>Exercice de frappe au clavier</h1>
+    <h1>Choisissez un jeu</h1>
+    <p class="sous-titre">Des mini-jeux pour s'entraîner à la frappe autrement.</p>
 
-    <div id="menu-principal">
-      <button id="btn-entrainement">Entraînement</button>
-      <br>
-      <button onclick="window.location.href='evaluation.html'">Évaluation</button>
-      <br>
-      <button onclick="window.location.href='game.html'">Jeu</button>
+    <div class="galerie-jeux">
+      <a class="carte-jeu" href="v1/rainrock.html">
+        <div class="carte-jeu-icone">☄️</div>
+        <h2>RainRock</h2>
+        <p>Anéantis la menace avec ta vitesse d'écriture au clavier.</p>
+      </a>
     </div>
   </div>
-
-  <!-- Pop-up (modale) -->
-  <div id="popupEntrainement" class="modal">
-    <div class="modal-content">
-      <span class="close" id="closeModal">&times;</span>
-      <h2>Choisissez votre type d'entraînement</h2>
-      <button onclick="window.location.href='training.html'">Phrases</button>
-      <button onclick="window.location.href='training2.html'">Mots de passe</button>
-    </div>
-  </div>
-
-  <script src="asset/js/popUp.js"></script>
 </body>
 </html>

@@ -8,24 +8,6 @@ body {
   margin: 0;
 }
 
-.menu-retour {
-  position: absolute;
-  top: 15px;
-  left: 20px;
-}
-
-.menu-retour a {
-  text-decoration: none;
-  color: #555;
-  font-size: 0.9rem;
-  opacity: 0.7;
-  transition: opacity 0.2s;
-}
-
-.menu-retour a:hover {
-  opacity: 1;
-}
-
 .container {
   background: white;
   padding: 2rem;

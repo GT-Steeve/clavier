@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>RainRock - Défense Anti-Météores</title>
+  <link rel="stylesheet" href="asset/css/rainrock.css">
+</head>
+<body>
+  <div class="menu-retour">
+    <a href="game.html">← Retour aux jeux</a>
+  </div>
+
+  <div class="container">
+    <h1>Défense Anti-Météores</h1>
+
+    <div class="hud" id="hud">
+      <div class="hud-item">⭐ Score : <span id="score">0</span></div>
+      <div class="hud-item">❤️ Vies : <span id="vies">3</span></div>
+      <div class="hud-item">🌀 Cycle : <span id="cycle">Facile</span></div>
+      <div class="hud-item">🌠 Météores : <span id="meteores">0 / 0</span></div>
+    </div>
+
+    <div class="canvas-wrapper">
+      <canvas id="jeu"></canvas>
+
+      <div id="ecran-titre" class="ecran ecran-transparent">
+        <div class="mot-a-taper" id="mot-menu"></div>
+        <p class="indice">Tapez ce mot au clavier pour continuer</p>
+      </div>
+
+      <div id="ecran-popup-menu" class="ecran ecran-popup" style="display:none;">
+        <h2>Menu principal</h2>
+        <p class="indice">Écris le bouton pour choisir ce mode</p>
+        <div class="choix-boutons choix-menu">
+          <button disabled>AVENTURE</button>
+          <button disabled>SURVIE</button>
+          <div class="bouton-menu" id="mot-entrainement"></div>
+          <button disabled>BOUTIQUE</button>
+          <button disabled>OPTION</button>
+        </div>
+      </div>
+
+      <div id="ecran-debut" class="ecran ecran-leger" style="display:none;">
+        <h2>Défendez la base !</h2>
+        <p>
+          Détruisez les météores en frappant au clavier leurs mots associés.
+        </p>
+        <div class="bouton-menu" id="mot-commencer"></div>
+        <p class="indice">Tapez COMMENCER pour lancer la partie</p>
+      </div>
+
+      <div id="ecran-cycle" class="ecran" style="display:none;">
+        <h2 id="cycle-termine"></h2>
+        <p>Continuer ?</p>
+        <div class="choix-boutons">
+          <div class="bouton-menu" id="mot-oui"></div>
+          <div class="bouton-menu" id="mot-non"></div>
+        </div>
+      </div>
+
+      <div id="ecran-difficulte" class="ecran" style="display:none;">
+        <h2>Choisissez la difficulté</h2>
+        <div class="choix-boutons" id="choix-difficulte"></div>
+      </div>
+
+      <div id="ecran-fin" class="ecran" style="display:none;">
+        <h2 id="titre-fin">💥 Base détruite !</h2>
+        <p>Score final : <strong id="score-final">0</strong></p>
+        <p>Rejouer ?</p>
+        <div class="choix-boutons">
+          <div class="bouton-menu" id="mot-rejouer-oui"></div>
+          <div class="bouton-menu" id="mot-rejouer-non"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="asset/js/rainrock.js"></script>
+</body>
+</html>

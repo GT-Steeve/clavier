@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Jeu de frappe - Défense Anti-Météores</title>
+  <title>Choisir un jeu</title>
   <link rel="stylesheet" href="asset/css/game.css">
 </head>
 <body>
@@ -11,50 +11,16 @@
   </div>
 
   <div class="container">
-    <h1>Défense Anti-Météores</h1>
+    <h1>Choisissez un jeu</h1>
+    <p class="sous-titre">Des mini-jeux pour s'entraîner à la frappe autrement.</p>
 
-    <div class="hud">
-      <div class="hud-item">⭐ Score : <span id="score">0</span></div>
-      <div class="hud-item">❤️ Vies : <span id="vies">3</span></div>
-      <div class="hud-item">🌀 Cycle : <span id="cycle">Facile</span></div>
-      <div class="hud-item">🌠 Météores : <span id="meteores">0 / 0</span></div>
-    </div>
-
-    <div class="canvas-wrapper">
-      <canvas id="jeu"></canvas>
-
-      <div id="ecran-debut" class="ecran">
-        <h2>Défendez la base !</h2>
-        <p>
-          Des rochers tombent du ciel avec un mot inscrit dessus.<br>
-          Tapez la première lettre d'un mot pour que le canon vise le rocher correspondant,<br>
-          puis continuez à taper le mot en entier pour le détruire.
-        </p>
-        <button id="btn-jouer">Commencer</button>
-      </div>
-
-      <div id="ecran-cycle" class="ecran" style="display:none;">
-        <h2>🎯 Cycle <span id="cycle-termine"></span> terminé !</h2>
-        <p>Continuer ?</p>
-        <div class="choix-boutons">
-          <button id="btn-continuer-oui">Oui</button>
-          <button id="btn-continuer-non">Non</button>
-        </div>
-      </div>
-
-      <div id="ecran-difficulte" class="ecran" style="display:none;">
-        <h2>Choisissez la difficulté</h2>
-        <div class="choix-boutons" id="choix-difficulte"></div>
-      </div>
-
-      <div id="ecran-fin" class="ecran" style="display:none;">
-        <h2 id="titre-fin">💥 Base détruite !</h2>
-        <p>Score final : <strong id="score-final">0</strong></p>
-        <button id="btn-rejouer">Rejouer</button>
-      </div>
+    <div class="galerie-jeux">
+      <a class="carte-jeu" href="rainrock.html">
+        <div class="carte-jeu-icone">☄️</div>
+        <h2>RainRock</h2>
+        <p>Anéantis la menace avec ta vitesse d'écriture au clavier.</p>
+      </a>
     </div>
   </div>
-
-  <script src="asset/js/game.js"></script>
 </body>
 </html>

@@ -205,3 +205,77 @@ button:disabled {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.15; }
 }
+
+/* Carte de progression du mode Aventure (rectangles = niveaux, ronds = étapes tuto) */
+.carte-aventure {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 10px 30%;
+  box-sizing: border-box;
+  scroll-behavior: smooth;
+}
+
+.etape-carte {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.etape-niveau {
+  width: 78px;
+  height: 50px;
+  border-radius: 8px;
+  background: #2ecc71;
+  border: 2px solid #1e8449;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: bold;
+  color: #0b1237;
+  text-align: center;
+  padding: 4px;
+  box-sizing: border-box;
+  transition: outline 0.15s ease, opacity 0.15s ease;
+}
+
+.etape-tuto {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #4e73df;
+  border: 2px solid #2d4faa;
+  transition: outline 0.15s ease, opacity 0.15s ease;
+}
+
+.etape-theme {
+  font-size: 0.6rem;
+  color: #9aa5e8;
+  max-width: 60px;
+  text-align: center;
+  line-height: 1.1;
+}
+
+.etape-connecteur {
+  width: 16px;
+  height: 4px;
+  background: #555b6e;
+  flex: 0 0 auto;
+}
+
+.etape-active .etape-niveau,
+.etape-active .etape-tuto {
+  outline: 3px solid #ffd166;
+  outline-offset: 2px;
+}
+
+.etape-complete .etape-niveau,
+.etape-complete .etape-tuto {
+  opacity: 0.45;
+}

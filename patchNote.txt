@@ -13,3 +13,4 @@ v0.09.0 = Anticheat sur evaluation
 v0.10.0 = ajout jeu météore
 v0.10.1 = entrainement météore finis
 v1.00.0 = rework architecture du projet
+v1.01.0 = rework aventure + ajout mode survie

@@ -9,7 +9,14 @@ const meteoresEl = document.getElementById('meteores');
 const ecranTitre = document.getElementById('ecran-titre');
 const motMenuEl = document.getElementById('mot-menu');
 const ecranPopupMenu = document.getElementById('ecran-popup-menu');
+const motAventureEl = document.getElementById('mot-aventure');
+const motSurvieEl = document.getElementById('mot-survie');
 const motEntrainementEl = document.getElementById('mot-entrainement');
+const ecranProgression = document.getElementById('ecran-progression');
+const titreProgressionEl = document.getElementById('titre-progression');
+const carteAventureEl = document.getElementById('carte-aventure');
+const motSuiteAventureEl = document.getElementById('mot-suite-aventure');
+const indiceSuiteAventureEl = document.getElementById('indice-suite-aventure');
 const ecranDebut = document.getElementById('ecran-debut');
 const motCommencerEl = document.getElementById('mot-commencer');
 const ecranCycle = document.getElementById('ecran-cycle');
@@ -144,6 +151,100 @@ const mots = [
   'uranus', 'pluton', 'choc', 'danger', 'roche', 'poussiere'
 ];
 
+// Mots du mode Aventure : un tableau par étape, à remplir/corriger à la main.
+// Convention de nommage : tableauN = Niveau N, tableauNn = le tuto qui suit
+// le Niveau N (ex. tableau1n = tuto "Shift + MAJ" entre Niveau 1 et Niveau 2).
+// En mode Aventure, les mots sont piochés dans l'ordre de ces tableaux (voir
+// motAleatoire), donc l'ordre des mots ici est l'ordre dans lequel ils tombent.
+const tableau1 = [
+  'lune', 'mars', 'venus', 'soleil', 'comete', 'astre', 'orbite',
+  'cosmos', 'galaxie', 'planete', 'etoile', 'fusee', 'cratere',
+  'gravite', 'satellite', 'meteore', 'nebuleuse', 'asteroide',
+  'espace', 'impact', 'jupiter', 'saturne', 'neptune', 'mercure'
+];
+
+const tableau1n = ['Mars2', 'Vega1', 'Orion3', 'Terre7', 'Nova5', 'Astre9', 'Zeta4', 'Rex6', 'Ori8', 'Lyra0'];
+
+const tableau2 = [
+  'Mars42', 'Vega17', 'Comete3', 'Astro99', 'Nova21', 'Terre88',
+  'Zeta56', 'Etoile7', 'Orion14', 'Rex2000', 'Lyra33', 'Vesta45'
+];
+
+const tableau2n = ['ch@t', 'cl[é]', 'vi{e}', 'or|an', 'an~ée', '^haut', 'r#1', 'vu%2', 'ok$3', '€uro'];
+
+const tableau3 = [
+  '@#123', '[{}]', '~^`|', 'é&è', 'ç"@', '#1$2', '§µ%¨',
+  '€£¤', '?!;:', '(-_-)', 'a[1]', 'b{2}'
+];
+
+const tableau3n = ['bête', 'forêt', 'être', 'fenêtre', 'pêche', 'tête', 'même', 'arrêt', 'fête', 'crêpe'];
+
+const tableau4 = [
+  'bête', 'énorme', 'naïve', 'Noël3', 'café€', 'forêt7', 'île42',
+  'Müller', 'déjà$', 'ça£va', 'Écran9', 'coûte%'
+];
+
+// Mode Survie : pioche au hasard dans les 4 tableaux niveau réunis (voir demarrerSurvie).
+const motsSurvie = [...tableau1, ...tableau2, ...tableau3, ...tableau4];
+
+// Progression du mode Aventure (voir v1/aventure.png) : Niveau 1 -> Tuto -> Niveau 2
+// -> Tuto -> Niveau 3 -> Tuto -> Niveau 4. Chaque étape définit son rythme d'apparition
+// (intervalSpawn) et son tableau de mots, et ne compte qu'un seul cycle (contrairement
+// aux cycles classiques Facile/Moyen/Difficile/Survie qui peuvent s'enchaîner plusieurs
+// fois) : le nombre de météores du cycle est le nombre de mots du tableau de l'étape
+// (voir demarrerCycle/majMeteoresHUD), donc l'étape fait défiler tout son vocabulaire
+// une fois puis passe directement à l'étape suivante.
+const ETAPES_AVENTURE = [
+  {
+    type: 'niveau',
+    nom: 'Niveau 1',
+    intervalSpawn: 2500,
+    mots: tableau1
+  },
+  {
+    type: 'tuto',
+    nom: 'Tuto',
+    theme: 'Shift + MAJ',
+    indice: 'Maintenez Shift pour écrire les majuscules.',
+    intervalSpawn: 5000,
+    mots: tableau1n
+  },
+  {
+    type: 'niveau',
+    nom: 'Niveau 2',
+    intervalSpawn: 2500,
+    mots: tableau2
+  },
+  {
+    type: 'tuto',
+    nom: 'Tuto',
+    theme: 'ALT',
+    indice: 'Utilisez AltGr pour écrire les symboles spéciaux (@ # [ ] { } ~ ^).',
+    intervalSpawn: 5000,
+    mots: tableau2n
+  },
+  {
+    type: 'niveau',
+    nom: 'Niveau 3',
+    intervalSpawn: 2500,
+    mots: tableau3
+  },
+  {
+    type: 'tuto',
+    nom: 'Tuto',
+    theme: 'Accent',
+    indice: 'Les lettres accentuées se tapent avec les touches mortes ( ^ ¨ ` ).',
+    intervalSpawn: 5000,
+    mots: tableau3n
+  },
+  {
+    type: 'niveau',
+    nom: 'Niveau 4',
+    intervalSpawn: 1500,
+    mots: tableau4
+  }
+];
+
 // Chaque cycle définit sa fréquence d'apparition des météores (intervalSpawn, en ms)
 // et le nombre de météores à faire apparaître avant de passer au cycle suivant.
 // "actif: false" permet de préparer un cycle sans l'inclure dans la rotation de jeu.
@@ -166,12 +267,25 @@ let intervalSpawn = cycles[0].intervalSpawn;
 let vitesseBase = 40;
 let dernierFrame = 0;
 let cycleIndex = 0;
+let cycleActuel = cycles[0];
 let meteoresRestantsCycle = 0;
 let attenteFinCycle = false;
 let finExplosionsTimestamp = null;
 let secousse = 0;
 let vaguesTerminees = 0;
 const DELAI_CHOIX_CONTINUER = 1500;
+
+// Liste de mots actuellement utilisée pour les météores : la liste générique par
+// défaut, remplacée par le thème de l'étape en cours pendant le mode Aventure.
+let motsActuels = mots;
+
+// Mode Aventure : progression fixe à travers ETAPES_AVENTURE (voir plus haut).
+let modeAventureActif = false;
+let etapeAventureIndex = 0;
+
+// Mode Survie : cycles infinis de difficulté tirée au sort (voir demarrerSurvie).
+let modeSurvieActif = false;
+let cycleSurvieCompte = 0;
 
 // Le tout premier météore d'une partie réelle arrive plus tôt (0.5s) et tombe
 // plus lentement, histoire de laisser le temps de s'installer. Les suivants
@@ -187,6 +301,8 @@ let demoDernierAppui = 0;
 const DEMO_INTERVAL_APPUI = 450;
 
 const MOT_MENU = 'MENU';
+const MOT_AVENTURE = 'AVENTURE';
+const MOT_SURVIE = 'SURVIE';
 const MOT_ENTRAINEMENT = 'ENTRAINEMENT';
 const MOT_COMMENCER = 'COMMENCER';
 
@@ -309,27 +425,52 @@ function prochainCycleActif(depuis) {
   return depuis;
 }
 
-function demarrerCycle(index) {
-  cycleIndex = index;
-  const cycle = cycles[cycleIndex];
-  intervalSpawn = cycle.intervalSpawn;
-  meteoresRestantsCycle = cycle.nombreMeteores;
+// Nombre de météores d'un cycle : pour une étape Aventure (qui a un tableau `mots`),
+// c'est la longueur de ce tableau (une vague = tout le vocabulaire de l'étape une
+// fois) ; pour un cycle classique (Facile/Moyen/Difficile/Survie), c'est nombreMeteores.
+function nombreMeteoresCycle(cycle) {
+  return cycle.mots ? cycle.mots.length : cycle.nombreMeteores;
+}
+
+// cycleOuIndex : soit un index dans `cycles` (Entraînement/démo), soit directement
+// un objet {nom, intervalSpawn, ...} comme une étape d'ETAPES_AVENTURE ou un cycle
+// de Survie (voir nombreMeteoresCycle pour comment le nombre de météores en découle).
+function demarrerCycle(cycleOuIndex) {
+  const estIndex = typeof cycleOuIndex === 'number';
+  cycleIndex = estIndex ? cycleOuIndex : -1;
+  cycleActuel = estIndex ? cycles[cycleOuIndex] : cycleOuIndex;
+  intervalSpawn = cycleActuel.intervalSpawn;
+  meteoresRestantsCycle = nombreMeteoresCycle(cycleActuel);
   attenteFinCycle = false;
   finExplosionsTimestamp = null;
-  cycleEl.textContent = cycle.nom;
+  cycleEl.textContent = cycleActuel.nom;
   majMeteoresHUD();
 }
 
 // Affiche météores restants (non apparus + encore en jeu) / total du cycle en cours
 function majMeteoresHUD() {
-  const total = cycles[cycleIndex].nombreMeteores;
+  const total = nombreMeteoresCycle(cycleActuel);
   const restant = meteoresRestantsCycle + roches.length;
   meteoresEl.textContent = `${restant} / ${total}`;
 }
 
+// En mode Aventure, avance dans le tableau de mots de l'étape (tableau1, tableau1n, ...)
+// dans l'ordre d'index plutôt qu'au hasard, pour permettre un vocabulaire écrit à la
+// main. Remis à zéro à chaque nouvelle étape par lancerEtapeAventure(). Comme une vague
+// compte exactement autant de météores que le tableau a de mots (voir nombreMeteoresCycle),
+// chaque vague fait défiler le tableau une fois dans l'ordre ; le modulo ne sert qu'à
+// repartir du début au fil des vagues suivantes de la même étape.
+let indexMotAventure = 0;
+
 function motAleatoire() {
-  const dispo = mots.filter(m => !roches.some(r => r.mot === m));
-  const liste = dispo.length ? dispo : mots;
+  if (modeAventureActif) {
+    const mot = motsActuels[indexMotAventure % motsActuels.length];
+    indexMotAventure++;
+    return mot;
+  }
+
+  const dispo = motsActuels.filter(m => !roches.some(r => r.mot === m));
+  const liste = dispo.length ? dispo : motsActuels;
   return liste[Math.floor(Math.random() * liste.length)];
 }
 
@@ -361,6 +502,9 @@ function demarrer(indexCycleDepart = premierCycleActif()) {
   vies = 3;
   jeuActif = true;
   modeDemo = false;
+  modeAventureActif = false;
+  modeSurvieActif = false;
+  motsActuels = mots;
   vitesseBase = 40;
   secousse = 0;
   vaguesTerminees = 0;
@@ -392,6 +536,9 @@ function demarrerDemo() {
   cible = null;
   jeuActif = true;
   modeDemo = true;
+  modeAventureActif = false;
+  modeSurvieActif = false;
+  motsActuels = mots;
   vitesseBase = 40;
   secousse = 0;
   demarrerCycle(premierCycleActif());
@@ -405,6 +552,72 @@ function demarrerDemo() {
   requestAnimationFrame(boucle);
 }
 
+// --- Mode Survie : cycles infinis, difficulté tirée au sort à chaque cycle parmi
+// Facile/Moyen/Difficile, sauf tous les 5 cycles (5, 10, 15, ...) où le cycle est
+// toujours "Très difficile" (palier). Les mots sont piochés au hasard dans motsSurvie
+// (les 4 tableaux niveau de l'Aventure réunis). Pas d'écran "Continuer ?" entre deux
+// cycles : ça enchaîne directement, la partie ne s'arrête qu'à la perte de la dernière vie.
+
+// Choisit le prochain cycle de la Survie : palier "Très difficile" tous les 5 cycles,
+// sinon tirage au sort parmi les cycles normaux actifs (Facile/Moyen/Difficile).
+function prochainCycleSurvie() {
+  cycleSurvieCompte++;
+  if (cycleSurvieCompte % 5 === 0) {
+    return cycles.find(c => c.nom === 'Très difficile');
+  }
+  const normaux = cycles.filter(c => c.actif);
+  return normaux[Math.floor(Math.random() * normaux.length)];
+}
+
+// Point d'entrée du mode Survie (SURVIE choisi au menu).
+function demarrerSurvie() {
+  redimensionnerCanvas();
+  roches = [];
+  projectiles = [];
+  particules = [];
+  cible = null;
+  score = 0;
+  vies = 3;
+  jeuActif = true;
+  modeDemo = false;
+  modeAventureActif = false;
+  modeSurvieActif = true;
+  motsActuels = motsSurvie;
+  vitesseBase = 40;
+  secousse = 0;
+  vaguesTerminees = 0;
+  premiereMeteoreLancee = false;
+  cycleSurvieCompte = 0;
+  demarrerCycle(prochainCycleSurvie());
+
+  scoreEl.textContent = score;
+  viesEl.textContent = vies;
+  hudEl.style.display = 'flex';
+  ecranTitre.style.display = 'none';
+  ecranPopupMenu.style.display = 'none';
+  ecranDebut.style.display = 'none';
+  ecranCycle.style.display = 'none';
+  ecranDifficulte.style.display = 'none';
+  ecranFin.style.display = 'none';
+
+  const maintenant = performance.now();
+  dernierSpawn = maintenant;
+  dernierFrame = maintenant;
+  requestAnimationFrame(boucle);
+}
+
+// Appelé à la place de finCycle() en mode Survie : enchaîne directement sur un
+// nouveau cycle de difficulté tirée au sort, sans écran de pause.
+function finCycleSurvie() {
+  vaguesTerminees++;
+  demarrerCycle(prochainCycleSurvie());
+  jeuActif = true;
+  const maintenant = performance.now();
+  dernierSpawn = maintenant;
+  dernierFrame = maintenant;
+  requestAnimationFrame(boucle);
+}
+
 // Vrai lorsque l'écran de difficulté sert à choisir la difficulté de départ
 // (avant la vague 1), plutôt qu'à enchaîner sur la vague suivante.
 let choixDifficulteInitial = false;
@@ -414,6 +627,131 @@ function lancerAvecChoixDifficulte() {
   choixDifficulteInitial = true;
   ecranDebut.style.display = 'none';
   afficherChoixDifficulte();
+}
+
+// --- Mode Aventure : progression fixe à travers ETAPES_AVENTURE, visualisée par
+// une carte (rectangles verts = niveaux, ronds bleus = étapes tuto), comme aventure.png.
+
+// Construit une fois la carte de progression à partir d'ETAPES_AVENTURE.
+function construireCarteAventure() {
+  carteAventureEl.innerHTML = '';
+  ETAPES_AVENTURE.forEach((etape, i) => {
+    if (i > 0) {
+      const connecteur = document.createElement('div');
+      connecteur.className = 'etape-connecteur';
+      carteAventureEl.appendChild(connecteur);
+    }
+
+    const wrapper = document.createElement('div');
+    wrapper.className = `etape-carte etape-numero-${i}`;
+
+    if (etape.type === 'niveau') {
+      const boite = document.createElement('div');
+      boite.className = 'etape-niveau';
+      boite.textContent = etape.nom;
+      wrapper.appendChild(boite);
+    } else {
+      const theme = document.createElement('div');
+      theme.className = 'etape-theme';
+      theme.textContent = etape.theme;
+      const rond = document.createElement('div');
+      rond.className = 'etape-tuto';
+      wrapper.appendChild(theme);
+      wrapper.appendChild(rond);
+    }
+
+    carteAventureEl.appendChild(wrapper);
+  });
+}
+construireCarteAventure();
+
+// Affiche la carte de progression (étape courante mise en évidence, étapes passées
+// grisées) avec une invite clavier pour continuer. `complet` = toute l'Aventure est
+// terminée (dernière étape franchie) : affiche un message de victoire et ramène au menu.
+function afficherProgressionAventure(callback, complet = false) {
+  ETAPES_AVENTURE.forEach((etape, i) => {
+    const wrapper = carteAventureEl.querySelector(`.etape-numero-${i}`);
+    wrapper.classList.toggle('etape-complete', complet || i < etapeAventureIndex);
+    wrapper.classList.toggle('etape-active', !complet && i === etapeAventureIndex);
+    if (!complet && i === etapeAventureIndex) {
+      wrapper.scrollIntoView({ inline: 'center', block: 'nearest' });
+    }
+  });
+
+  if (complet) {
+    titreProgressionEl.textContent = '🏆 Aventure terminée !';
+    indiceSuiteAventureEl.textContent = '';
+  } else {
+    const etape = ETAPES_AVENTURE[etapeAventureIndex];
+    titreProgressionEl.textContent = `Prochaine étape : ${etape.nom}${etape.theme ? ' (' + etape.theme + ')' : ''}`;
+    indiceSuiteAventureEl.textContent = etape.indice || '';
+  }
+
+  ecranProgression.style.display = 'flex';
+  demarrerPrompt(complet ? MOT_MENU : MOT_COMMENCER, motSuiteAventureEl, () => {
+    ecranProgression.style.display = 'none';
+    callback();
+  });
+}
+
+// Point d'entrée du mode Aventure (COMMENCER tapé après avoir choisi AVENTURE au menu).
+function demarrerAventure() {
+  modeAventureActif = true;
+  modeSurvieActif = false;
+  etapeAventureIndex = 0;
+  score = 0;
+  vies = 3;
+  vaguesTerminees = 0;
+  scoreEl.textContent = score;
+  viesEl.textContent = vies;
+  premiereMeteoreLancee = false;
+
+  ecranTitre.style.display = 'none';
+  ecranPopupMenu.style.display = 'none';
+  afficherProgressionAventure(lancerEtapeAventure);
+}
+
+// Lance (ou relance) l'étape en cours d'ETAPES_AVENTURE : réinitialise l'arène de
+// jeu mais conserve score/vies, qui persistent sur toute la durée de l'Aventure.
+function lancerEtapeAventure() {
+  redimensionnerCanvas();
+  const etape = ETAPES_AVENTURE[etapeAventureIndex];
+  motsActuels = etape.mots;
+  indexMotAventure = 0;
+
+  roches = [];
+  projectiles = [];
+  particules = [];
+  cible = null;
+  jeuActif = true;
+  modeDemo = false;
+  vitesseBase = 40;
+  secousse = 0;
+  demarrerCycle(etape);
+
+  hudEl.style.display = 'flex';
+  ecranProgression.style.display = 'none';
+  ecranFin.style.display = 'none';
+
+  const maintenant = performance.now();
+  dernierSpawn = maintenant;
+  dernierFrame = maintenant;
+  requestAnimationFrame(boucle);
+}
+
+// Appelé à la place de finCycle() en mode Aventure : chaque étape ne compte qu'un
+// seul cycle, donc on passe directement à l'étape suivante et on affiche la carte
+// de progression (ou l'écran de victoire si c'était la dernière étape).
+function finVagueAventure() {
+  jeuActif = false;
+  etapeAventureIndex++;
+
+  if (etapeAventureIndex >= ETAPES_AVENTURE.length) {
+    afficherProgressionAventure(retournerAuMenuPrincipal, true);
+    return;
+  }
+
+  afficherProgressionAventure(lancerEtapeAventure);
 }
 
 // Base détruite : demande "Rejouer ?" au clavier (OUI relance, NON retourne au menu).
@@ -431,7 +769,9 @@ function finDeJeu(titre = '💥 Base détruite !') {
     (choix) => {
       ecranFin.style.display = 'none';
       if (choix === 'OUI') {
-        demarrer();
+        if (modeAventureActif) demarrerAventure();
+        else if (modeSurvieActif) demarrerSurvie();
+        else demarrer();
       } else {
         retournerAuMenuPrincipal();
       }
@@ -520,7 +860,13 @@ function boucle(t) {
       // animation d'explosion puis un court délai avant de proposer de continuer.
       if (finExplosionsTimestamp === null) finExplosionsTimestamp = t;
       if (t - finExplosionsTimestamp >= DELAI_CHOIX_CONTINUER) {
-        finCycle();
+        if (modeAventureActif) {
+          finVagueAventure();
+        } else if (modeSurvieActif) {
+          finCycleSurvie();
+        } else {
+          finCycle();
+        }
         return;
       }
     }
@@ -797,8 +1143,11 @@ window.addEventListener('keydown', (e) => {
     // Navigation clavier dans les écrans démo/menus (MENU, ENTRAINEMENT, COMMENCER)
     traiterLettrePrompt(e.key);
   } else if (!modeDemo && jeuActif) {
-    // Partie réelle en cours : la frappe vise/détruit les météores
-    traiterLettreMeteore(e.key.toLowerCase());
+    // Partie réelle en cours : la frappe vise/détruit les météores.
+    // En Aventure et en Survie, la casse compte (mots piochés dans les tableaux
+    // niveau, qui contiennent des majuscules) ; en Entraînement, tout est en
+    // minuscules donc on reste insensible à la casse.
+    traiterLettreMeteore((modeAventureActif || modeSurvieActif) ? e.key : e.key.toLowerCase());
   }
 });
 
@@ -856,8 +1205,8 @@ function retournerAuTitre() {
   lancerSequenceMenu();
 }
 
-// Démarre l'écran titre (démo jouée par une IA) puis enchaîne les invites
-// clavier MENU -> ENTRAINEMENT -> COMMENCER avant de lancer la vraie partie.
+// Démarre l'écran titre (démo jouée par une IA) puis enchaîne les invites clavier
+// MENU -> (AVENTURE, SURVIE ou ENTRAINEMENT) -> COMMENCER avant de lancer la vraie partie.
 function lancerSequenceMenu() {
   ecranTitre.style.display = 'flex';
   demarrerPrompt(MOT_MENU, motMenuEl, () => {
@@ -866,13 +1215,27 @@ function lancerSequenceMenu() {
     dansPopupMenu = true;
     planifierRetourDemo();
 
-    demarrerPrompt(MOT_ENTRAINEMENT, motEntrainementEl, () => {
-      dansPopupMenu = false;
-      annulerRetourDemo();
-      ecranPopupMenu.style.display = 'none';
-      ecranDebut.style.display = 'flex';
-      demarrerPrompt(MOT_COMMENCER, motCommencerEl, lancerAvecChoixDifficulte);
-    });
+    demarrerChoixPrompt(
+      [
+        { mot: MOT_AVENTURE, element: motAventureEl },
+        { mot: MOT_SURVIE, element: motSurvieEl },
+        { mot: MOT_ENTRAINEMENT, element: motEntrainementEl }
+      ],
+      (choix) => {
+        dansPopupMenu = false;
+        annulerRetourDemo();
+        ecranPopupMenu.style.display = 'none';
+
+        if (choix === MOT_AVENTURE) {
+          demarrerAventure();
+        } else if (choix === MOT_SURVIE) {
+          demarrerSurvie();
+        } else {
+          ecranDebut.style.display = 'flex';
+          demarrerPrompt(MOT_COMMENCER, motCommencerEl, lancerAvecChoixDifficulte);
+        }
+      }
+    );
   }, true);
 }
 

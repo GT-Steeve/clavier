@@ -32,12 +32,19 @@
         <h2>Menu principal</h2>
         <p class="indice">Écris le bouton pour choisir ce mode</p>
         <div class="choix-boutons choix-menu">
-          <button disabled>AVENTURE</button>
-          <button disabled>SURVIE</button>
+          <div class="bouton-menu" id="mot-aventure"></div>
+          <div class="bouton-menu" id="mot-survie"></div>
           <div class="bouton-menu" id="mot-entrainement"></div>
           <button disabled>BOUTIQUE</button>
           <button disabled>OPTION</button>
         </div>
+      </div>
+
+      <div id="ecran-progression" class="ecran ecran-leger" style="display:none;">
+        <h2 id="titre-progression"></h2>
+        <div class="carte-aventure" id="carte-aventure"></div>
+        <div class="bouton-menu" id="mot-suite-aventure"></div>
+        <p class="indice" id="indice-suite-aventure"></p>
       </div>
 
       <div id="ecran-debut" class="ecran ecran-leger" style="display:none;">

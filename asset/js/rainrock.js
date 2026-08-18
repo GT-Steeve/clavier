@@ -25,6 +25,10 @@ const motOuiEl = document.getElementById('mot-oui');
 const motNonEl = document.getElementById('mot-non');
 const ecranDifficulte = document.getElementById('ecran-difficulte');
 const choixDifficulteEl = document.getElementById('choix-difficulte');
+const motMajusculeEl = document.getElementById('mot-majuscule');
+const ecranTutoMajuscule = document.getElementById('ecran-tuto-majuscule');
+const motContinuerMajusculeEl = document.getElementById('mot-continuer-majuscule');
+const exemplesMajusculeEl = document.getElementById('exemples-majuscule');
 const ecranFin = document.getElementById('ecran-fin');
 const titreFinEl = document.getElementById('titre-fin');
 const scoreFinalEl = document.getElementById('score-final');
@@ -151,16 +155,24 @@ const mots = [
   'uranus', 'pluton', 'choc', 'danger', 'roche', 'poussiere'
 ];
 
+// Niveau tuto MAJUSCULE de l'Entraînement (voir afficherTutoMajuscule) : moitié en
+// CAPITALES (s'écrit avec Verr. Maj) et moitié avec seule l'initiale en majuscule
+// (s'écrit en maintenant Shift), pour pratiquer les deux méthodes.
+const tableauM = [
+  'LUNE', 'Mars', 'VENUS', 'Soleil', 'COMETE',
+  'Astre', 'ORBITE', 'Cosmos', 'GALAXIE', 'Planete'
+];
+
 // Mots du mode Aventure : un tableau par étape, à remplir/corriger à la main.
 // Convention de nommage : tableauN = Niveau N, tableauNn = le tuto qui suit
 // le Niveau N (ex. tableau1n = tuto "Shift + MAJ" entre Niveau 1 et Niveau 2).
 // En mode Aventure, les mots sont piochés dans l'ordre de ces tableaux (voir
 // motAleatoire), donc l'ordre des mots ici est l'ordre dans lequel ils tombent.
 const tableau1 = [
-  'lune', 'mars', 'venus', 'soleil', 'comete', 'astre', 'orbite',
-  'cosmos', 'galaxie', 'planete', 'etoile', 'fusee', 'cratere',
-  'gravite', 'satellite', 'meteore', 'nebuleuse', 'asteroide',
-  'espace', 'impact', 'jupiter', 'saturne', 'neptune', 'mercure'
+  'ecole', 'devoir', 'professeur', 'brevet', 'stylo', 'livre',
+  'cahier', 'crayon', 'gomme', 'sonnerie', 'trousse', 'classe',
+  'tableau', 'bureau', 'chaise', 'cours', 'examen', 'question',
+  'surligneur', 'exercice', 'note', 'anglais', 'espagnol', 'histoire'
 ];
 
 const tableau1n = ['Mars2', 'Vega1', 'Orion3', 'Terre7', 'Nova5', 'Astre9', 'Zeta4', 'Rex6', 'Ori8', 'Lyra0'];
@@ -173,8 +185,8 @@ const tableau2 = [
 const tableau2n = ['ch@t', 'cl[é]', 'vi{e}', 'or|an', 'an~ée', '^haut', 'r#1', 'vu%2', 'ok$3', '€uro'];
 
 const tableau3 = [
-  '@#123', '[{}]', '~^`|', 'é&è', 'ç"@', '#1$2', '§µ%¨',
-  '€£¤', '?!;:', '(-_-)', 'a[1]', 'b{2}'
+  '@#123', '[{}]', '~^`|', 'é&è', 'ç"@', '#1$2', '§',
+  '€£¤', '?!;:', '(-_-)', 'a[1]', 'µ', '75%'
 ];
 
 const tableau3n = ['bête', 'forêt', 'être', 'fenêtre', 'pêche', 'tête', 'même', 'arrêt', 'fête', 'crêpe'];
@@ -255,6 +267,11 @@ const cycles = [
   { nom: 'Très difficile', intervalSpawn: 1500, nombreMeteores: 15, actif: false }
 ];
 
+// Niveau tuto MAJUSCULE de l'Entraînement (voir afficherTutoMajuscule/lancerNiveauMajuscule) :
+// un seul passage sur tout tableauM, comme une étape de l'Aventure (nombreMeteoresCycle
+// s'appuie sur cycle.mots quand il est présent).
+const cycleMajuscule = { nom: 'Majuscule', intervalSpawn: 4000, mots: tableauM };
+
 let roches = [];
 let projectiles = [];
 let particules = [];
@@ -286,6 +303,13 @@ let etapeAventureIndex = 0;
 // Mode Survie : cycles infinis de difficulté tirée au sort (voir demarrerSurvie).
 let modeSurvieActif = false;
 let cycleSurvieCompte = 0;
+
+// Thème MAJUSCULE de l'écran de difficulté (mode Entraînement) : au lieu de choisir
+// une difficulté, affiche un tuto (voir afficherTutoMajuscule) puis lance un niveau
+// dédié sur tableauM, où la casse compte (comme en Aventure/Survie).
+let modeMajusculeNiveauActif = false;
+const MOT_MAJUSCULE = 'MAJUSCULE';
+const MOT_CONTINUER = 'CONTINUER';
 
 // Le tout premier météore d'une partie réelle arrive plus tôt (0.5s) et tombe
 // plus lentement, histoire de laisser le temps de s'installer. Les suivants
@@ -356,17 +380,20 @@ function traiterLettrePrompt(lettre) {
   }
 }
 
-// Choix binaire au clavier (ex: OUI / NON) : aucun mot n'est présélectionné,
-// la première lettre tapée détermine lequel des candidats devient la cible
-// (même principe que le ciblage des météores par première lettre).
+// Choix au clavier entre plusieurs mots (ex: OUI / NON, ou FACILE / MOYEN / DIFFICILE
+// / MAJUSCULE) : aucun mot n'est présélectionné, chaque lettre tapée filtre les
+// candidats encore compatibles avec ce qui a été tapé jusqu'ici (comme un préfixe).
+// Gère le cas où plusieurs candidats partagent la même lettre de départ (ex: MOYEN
+// et MAJUSCULE commencent tous les deux par M) : la cible ne se fige que lorsqu'il
+// ne reste plus qu'un seul candidat compatible avec le préfixe tapé.
 let promptCandidats = [];
-let promptCibleChoix = null;
+let candidatsChoixRestants = [];
 let progresPromptChoix = 0;
 let onChoixComplete = null;
 
 function demarrerChoixPrompt(candidats, callback) {
   promptCandidats = candidats;
-  promptCibleChoix = null;
+  candidatsChoixRestants = candidats;
   progresPromptChoix = 0;
   onChoixComplete = callback;
   candidats.forEach(c => rendreMotSurligne(c.element, c.mot, 0, false));
@@ -375,23 +402,24 @@ function demarrerChoixPrompt(candidats, callback) {
 function traiterLettreChoix(touche) {
   const lettre = touche.toLowerCase();
 
-  if (!promptCibleChoix) {
-    const trouve = promptCandidats.find(c => c.mot[0].toLowerCase() === lettre);
-    if (!trouve) return;
-    promptCibleChoix = trouve;
-  }
-
-  const attendue = promptCibleChoix.mot[progresPromptChoix].toLowerCase();
-  if (lettre !== attendue) return;
+  const correspondants = candidatsChoixRestants.filter(
+    c => (c.mot[progresPromptChoix] || '').toLowerCase() === lettre
+  );
+  if (correspondants.length === 0) return;
 
   progresPromptChoix++;
-  rendreMotSurligne(promptCibleChoix.element, promptCibleChoix.mot, progresPromptChoix, false);
+  correspondants.forEach(c => rendreMotSurligne(c.element, c.mot, progresPromptChoix, false));
+  // Les candidats qui viennent de sortir de la course reprennent leur affichage vierge.
+  candidatsChoixRestants
+    .filter(c => !correspondants.includes(c))
+    .forEach(c => rendreMotSurligne(c.element, c.mot, 0, false));
+  candidatsChoixRestants = correspondants;
 
-  if (progresPromptChoix >= promptCibleChoix.mot.length) {
-    const choix = promptCibleChoix.mot;
+  if (correspondants.length === 1 && progresPromptChoix >= correspondants[0].mot.length) {
+    const choix = correspondants[0].mot;
     const callback = onChoixComplete;
     promptCandidats = [];
-    promptCibleChoix = null;
+    candidatsChoixRestants = [];
     onChoixComplete = null;
     if (callback) callback(choix);
   }
@@ -504,7 +532,8 @@ function demarrer(indexCycleDepart = premierCycleActif()) {
   modeDemo = false;
   modeAventureActif = false;
   modeSurvieActif = false;
-  motsActuels = mots;
+  modeMajusculeNiveauActif = indexCycleDepart === cycleMajuscule;
+  motsActuels = modeMajusculeNiveauActif ? tableauM : mots;
   vitesseBase = 40;
   secousse = 0;
   vaguesTerminees = 0;
@@ -1124,6 +1153,40 @@ function traiterLettreMeteore(lettre) {
   if (motComplet) cible = null;
 }
 
+// Retour visuel du tuto MAJUSCULE (voir construireExemplesMajuscule) : Shift ('Shift',
+// longueur > 1) et les lettres de LETTRES_EXEMPLES_MAJUSCULE ne passent jamais le filtre
+// e.key.length !== 1 ci-dessous, d'où ces écouteurs dédiés. e.key (plutôt que e.code)
+// sert à repérer la lettre pressée : ça reste correct quelle que soit la disposition
+// clavier (AZERTY...).
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Shift') {
+    document.querySelectorAll('.touche-shift').forEach(el => el.classList.add('touche-maintenue'));
+    return;
+  }
+
+  const lettre = LETTRES_EXEMPLES_MAJUSCULE.find(l => e.key.toUpperCase() === l);
+  if (!lettre) return;
+
+  document.querySelectorAll(`.touche-lettre[data-lettre="${lettre}"]`).forEach(el => el.classList.add('touche-maintenue'));
+
+  if (e.key === lettre) {
+    // Majuscule effectivement obtenue (Shift ou Verr. Maj + lettre) : affiche le résultat après le "=".
+    const resultatEl = exemplesMajusculeEl.querySelector(`.resultat-majuscule[data-lettre="${lettre}"]`);
+    if (resultatEl) resultatEl.textContent = lettre;
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  if (e.key === 'Shift') {
+    document.querySelectorAll('.touche-shift').forEach(el => el.classList.remove('touche-maintenue'));
+    return;
+  }
+
+  const lettre = LETTRES_EXEMPLES_MAJUSCULE.find(l => e.key.toUpperCase() === l);
+  if (!lettre) return;
+  document.querySelectorAll(`.touche-lettre[data-lettre="${lettre}"]`).forEach(el => el.classList.remove('touche-maintenue'));
+});
+
 window.addEventListener('keydown', (e) => {
   if (e.key.length !== 1) return;
 
@@ -1144,10 +1207,10 @@ window.addEventListener('keydown', (e) => {
     traiterLettrePrompt(e.key);
   } else if (!modeDemo && jeuActif) {
     // Partie réelle en cours : la frappe vise/détruit les météores.
-    // En Aventure et en Survie, la casse compte (mots piochés dans les tableaux
-    // niveau, qui contiennent des majuscules) ; en Entraînement, tout est en
-    // minuscules donc on reste insensible à la casse.
-    traiterLettreMeteore((modeAventureActif || modeSurvieActif) ? e.key : e.key.toLowerCase());
+    // En Aventure, en Survie et sur le niveau tuto MAJUSCULE, la casse compte
+    // (mots contenant des majuscules) ; sur le reste de l'Entraînement, tout est
+    // en minuscules donc on reste insensible à la casse.
+    traiterLettreMeteore((modeAventureActif || modeSurvieActif || modeMajusculeNiveauActif) ? e.key : e.key.toLowerCase());
   }
 });
 
@@ -1158,9 +1221,19 @@ const candidatsDifficulte = construireChoixClavier(
   cycles.filter(c => c.actif).map(c => c.nom.toUpperCase())
 );
 
+// Bouton MAJUSCULE (thème de l'écran de difficulté) : contrairement aux candidats
+// de difficulté, il ne lance pas directement un niveau mais ouvre le tuto (voir
+// afficherChoixDifficulte / afficherTutoMajuscule).
+const candidatMajuscule = { mot: MOT_MAJUSCULE, element: motMajusculeEl };
+
 function afficherChoixDifficulte() {
   ecranDifficulte.style.display = 'flex';
-  demarrerChoixPrompt(candidatsDifficulte, (choixMot) => {
+  demarrerChoixPrompt([...candidatsDifficulte, candidatMajuscule], (choixMot) => {
+    if (choixMot === MOT_MAJUSCULE) {
+      afficherTutoMajuscule();
+      return;
+    }
+
     ecranDifficulte.style.display = 'none';
     const index = cycles.findIndex(c => c.nom.toUpperCase() === choixMot);
 
@@ -1171,6 +1244,10 @@ function afficherChoixDifficulte() {
       return;
     }
 
+    // Repasse en minuscules/insensible à la casse au cas où le cycle précédent
+    // était le niveau tuto MAJUSCULE (voir lancerNiveauMajuscule).
+    modeMajusculeNiveauActif = false;
+    motsActuels = mots;
     demarrerCycle(index);
     jeuActif = true;
     const maintenant = performance.now();
@@ -1178,6 +1255,70 @@ function afficherChoixDifficulte() {
     dernierFrame = maintenant;
     requestAnimationFrame(boucle);
   });
+}
+
+// 6 exemples SHIFT + lettre affichés dans le tuto (voir afficherTutoMajuscule), en deux
+// colonnes égales de 3 : I/A/Z à gauche, C/H/W à droite. Les bordures des touches
+// SHIFT/lettre pulsent (classe touche-maintenue, voir les écouteurs keydown/keyup sur
+// 'Shift' plus bas) tant que la vraie touche est maintenue, et la lettre obtenue
+// s'affiche après le "=" dès que la majuscule est effectivement tapée.
+const COLONNES_EXEMPLES_MAJUSCULE = [
+  ['I', 'A', 'Z'],
+  ['C', 'H', 'W']
+];
+const LETTRES_EXEMPLES_MAJUSCULE = COLONNES_EXEMPLES_MAJUSCULE.flat();
+
+function ligneExempleMajuscule(lettre) {
+  return `
+    <div class="exemple-majuscule">
+      <span class="touche touche-shift">⇧<br>SHIFT</span>
+      <span class="touche-plus">+</span>
+      <span class="touche touche-lettre" data-lettre="${lettre}">${lettre}</span>
+      <span class="touche-egal">=</span>
+      <span class="resultat-majuscule" data-lettre="${lettre}"></span>
+    </div>
+  `;
+}
+
+function construireExemplesMajuscule() {
+  exemplesMajusculeEl.innerHTML = COLONNES_EXEMPLES_MAJUSCULE.map(colonne => `
+    <div class="colonne-exemples-majuscule">
+      ${colonne.map(ligneExempleMajuscule).join('')}
+    </div>
+  `).join('');
+}
+
+// Tuto MAJUSCULE : petit schéma clavier (Shift / Verr. Maj) + explication, avant de
+// lancer le niveau dédié (tableauM). Se ferme en tapant CONTINUER, comme les autres
+// écrans de passage.
+function afficherTutoMajuscule() {
+  ecranDifficulte.style.display = 'none';
+  ecranTutoMajuscule.style.display = 'flex';
+  construireExemplesMajuscule();
+  demarrerPrompt(MOT_CONTINUER, motContinuerMajusculeEl, () => {
+    ecranTutoMajuscule.style.display = 'none';
+    lancerNiveauMajuscule();
+  });
+}
+
+// Lance le niveau tuto MAJUSCULE (un seul passage sur tableauM, casse sensible).
+// Comme afficherChoixDifficulte, gère aussi bien le tout premier niveau de la
+// partie (choixDifficulteInitial) que l'enchaînement après une vague précédente.
+function lancerNiveauMajuscule() {
+  if (choixDifficulteInitial) {
+    choixDifficulteInitial = false;
+    demarrer(cycleMajuscule);
+    return;
+  }
+
+  modeMajusculeNiveauActif = true;
+  motsActuels = tableauM;
+  demarrerCycle(cycleMajuscule);
+  jeuActif = true;
+  const maintenant = performance.now();
+  dernierSpawn = maintenant;
+  dernierFrame = maintenant;
+  requestAnimationFrame(boucle);
 }
 
 let redimTimeout = null;

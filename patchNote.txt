@@ -14,3 +14,4 @@ v0.10.0 = ajout jeu météore
 v0.10.1 = entrainement météore finis
 v1.00.0 = rework architecture du projet
 v1.01.0 = rework aventure + ajout mode survie
+v1.02.0 = ajoute theme majuscule en entrainement

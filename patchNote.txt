@@ -16,3 +16,4 @@ v1.00.0 = rework architecture du projet
 v1.01.0 = rework aventure + ajout mode survie
 v1.02.0 = ajout majuscule en entrainement
 v1.03.0 = ajout ALT, SPECIAUX1, SPECIAUX2 en entrainement
+v1.04.0 = ajout mode azerty / qwerty

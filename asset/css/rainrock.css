@@ -32,6 +32,19 @@ body {
   opacity: 1;
 }
 
+/* Rappel du mode clavier actif (AZERTY/QWERTY), toujours visible, mis à jour par
+   majIndicateurClavier() dès que le joueur choisit ou change de mode. */
+.indicateur-clavier {
+  position: absolute;
+  top: 42px;
+  left: 20px;
+  color: #7CFC00;
+  font-family: monospace;
+  font-weight: bold;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+}
+
 .container {
   background: white;
   padding: 1.5rem 2rem;

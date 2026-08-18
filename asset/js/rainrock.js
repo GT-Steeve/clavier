@@ -8,6 +8,10 @@ const cycleEl = document.getElementById('cycle');
 const meteoresEl = document.getElementById('meteores');
 const ecranTitre = document.getElementById('ecran-titre');
 const motMenuEl = document.getElementById('mot-menu');
+const ecranClavier = document.getElementById('ecran-clavier');
+const motAzertyEl = document.getElementById('mot-azerty');
+const motQwertyEl = document.getElementById('mot-qwerty');
+const indicateurClavierEl = document.getElementById('indicateur-clavier');
 const ecranPopupMenu = document.getElementById('ecran-popup-menu');
 const motAventureEl = document.getElementById('mot-aventure');
 const motSurvieEl = document.getElementById('mot-survie');
@@ -193,13 +197,42 @@ const PAIRES_SPECIAUX2 = [
   ['ù', '%'], ['!', '§'], [',', '?'], [';', '.'], [':', '/']
 ];
 
+// Équivalents QWERTY des thèmes SPECIAUX1/SPECIAUX2 (voir modeClavier) : le QWERTY n'a
+// pas de couche AltGr comme l'AZERTY, donc pas d'équivalent au thème ALT (voir
+// afficherChoixDifficulte). Son rang de chiffres donne directement les chiffres (pas des
+// caractères spéciaux, contrairement à l'AZERTY) : les symboles associés (!@#...) ne
+// s'obtiennent qu'avec Shift, d'où leur présence dans SPECIAUX2 plutôt que SPECIAUX1.
+const tableauS1Qwerty = ['-', '=', '[', ']', '\\', ';', "'", ',', '.', '/', '`'];
+const PAIRES_SPECIAUX2_QWERTY = [
+  ['-', '_'], ['=', '+'], ['[', '{'], [']', '}'], ['\\', '|'], [';', ':'], ["'", '"'],
+  [',', '<'], ['.', '>'], ['/', '?'], ['`', '~'],
+  ['1', '!'], ['2', '@'], ['3', '#'], ['4', '$'], ['5', '%'],
+  ['6', '^'], ['7', '&'], ['8', '*'], ['9', '('], ['0', ')']
+];
+const tableauS2Qwerty = PAIRES_SPECIAUX2_QWERTY.map(([, resultat]) => resultat);
+
+// Sélectionnent les données SPECIAUX1/2 actives selon modeClavier (voir
+// construireExemplesSpeciaux1/2, lancerNiveauSpeciaux1/2, et les écouteurs
+// keydown/keyup dédiés plus bas).
+function tableauSpeciaux1Actif() {
+  return modeClavier === 'azerty' ? tableauS1 : tableauS1Qwerty;
+}
+function pairesSpeciaux2Actives() {
+  return modeClavier === 'azerty' ? PAIRES_SPECIAUX2 : PAIRES_SPECIAUX2_QWERTY;
+}
+function tableauSpeciaux2Actif() {
+  return modeClavier === 'azerty' ? tableauS2 : tableauS2Qwerty;
+}
+
 // Deux touches mortes AZERTY (première pression sans effet visible : e.key vaut 'Dead',
 // en attente d'une touche suivante pour "libérer" le caractère) : AltGr+9 (^, thème ALT)
 // et la touche ^ ¨ dédiée, sans AltGr (^ sans Shift, ¨ avec Shift ; thèmes SPECIAUX1/2).
 // On les reconnaît directement via la touche physique (e.code, stable même quand
-// e.key vaut 'Dead') pour ne pas obliger à taper une touche de plus.
+// e.key vaut 'Dead') pour ne pas obliger à taper une touche de plus. Le QWERTY standard
+// n'a pas de touche morte dans nos tableaux (même ` / ~), donc rien à résoudre pour lui.
 function caractereReel(e) {
   if (e.key !== 'Dead') return e.key;
+  if (modeClavier !== 'azerty') return null;
   if (e.code === 'Digit9') return '^';
   if (e.code === 'BracketLeft') return e.shiftKey ? '¨' : '^';
   return null;
@@ -391,6 +424,19 @@ const MOT_AVENTURE = 'AVENTURE';
 const MOT_SURVIE = 'SURVIE';
 const MOT_ENTRAINEMENT = 'ENTRAINEMENT';
 const MOT_COMMENCER = 'COMMENCER';
+const MOT_AZERTY = 'AZERTY';
+const MOT_QWERTY = 'QWERTY';
+
+// Disposition clavier du joueur, redemandée à chaque passage par MENU (voir
+// lancerSequenceMenu/afficherChoixClavier) : conditionne le thème ALT (AZERTY
+// seulement, voir afficherChoixDifficulte) et le contenu des thèmes SPECIAUX1/SPECIAUX2
+// (voir tableauSpeciaux1Actif/pairesSpeciaux2Actives), ainsi que la résolution des
+// touches mortes dans caractereReel.
+let modeClavier = 'azerty';
+
+function majIndicateurClavier() {
+  indicateurClavierEl.textContent = modeClavier.toUpperCase();
+}
 
 // Vrai tant que le menu principal est affiché : sert à repousser le retour
 // automatique à la démo tant que le visiteur tape.
@@ -1289,9 +1335,10 @@ window.addEventListener('keyup', (e) => {
 
 // Retour visuel du tuto SPECIAUX1 (voir construireExemplesSpeciaux1) : pas de touche
 // spéciale à surveiller, juste un flash sur la touche pressée pour confirmer la frappe.
+// tableauSpeciaux1Actif() suit modeClavier (AZERTY ou QWERTY).
 window.addEventListener('keydown', (e) => {
   const touche = caractereReel(e);
-  if (!touche || !tableauS1.includes(touche)) return;
+  if (!touche || !tableauSpeciaux1Actif().includes(touche)) return;
   document.querySelectorAll('.touche-caractere-speciaux1').forEach(el => {
     if (el.dataset.caractere === touche) el.classList.add('touche-maintenue');
   });
@@ -1299,7 +1346,7 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('keyup', (e) => {
   const touche = caractereReel(e);
-  if (!touche || !tableauS1.includes(touche)) return;
+  if (!touche || !tableauSpeciaux1Actif().includes(touche)) return;
   document.querySelectorAll('.touche-caractere-speciaux1').forEach(el => {
     if (el.dataset.caractere === touche) el.classList.remove('touche-maintenue');
   });
@@ -1307,13 +1354,13 @@ window.addEventListener('keyup', (e) => {
 
 // Retour visuel du tuto SPECIAUX2 (voir construireExemplesSpeciaux2), même principe que
 // le tuto MAJUSCULE (la touche SHIFT elle-même pulse déjà via .touche-shift, voir plus
-// haut) : chaque paire touche/résultat de PAIRES_SPECIAUX2 est reconnue sur sa touche de
-// base (pressée sans Shift) comme sur son résultat (pressée avec Shift, qui déclenche
-// aussi l'affichage après le "=").
+// haut) : chaque paire touche/résultat de pairesSpeciaux2Actives() (AZERTY ou QWERTY
+// selon modeClavier) est reconnue sur sa touche de base (pressée sans Shift) comme sur
+// son résultat (pressée avec Shift, qui déclenche aussi l'affichage après le "=").
 window.addEventListener('keydown', (e) => {
   const touche = caractereReel(e);
   if (!touche) return;
-  const paire = PAIRES_SPECIAUX2.find(([base, resultat]) => touche === base || touche === resultat);
+  const paire = pairesSpeciaux2Actives().find(([base, resultat]) => touche === base || touche === resultat);
   if (!paire) return;
   const [base, resultat] = paire;
 
@@ -1330,7 +1377,7 @@ window.addEventListener('keydown', (e) => {
 window.addEventListener('keyup', (e) => {
   const touche = caractereReel(e);
   if (!touche) return;
-  const paire = PAIRES_SPECIAUX2.find(([base, resultat]) => touche === base || touche === resultat);
+  const paire = pairesSpeciaux2Actives().find(([base, resultat]) => touche === base || touche === resultat);
   if (!paire) return;
   document.querySelectorAll('.touche-caractere-speciaux2').forEach(el => {
     if (el.dataset.caractere === paire[0]) el.classList.remove('touche-maintenue');
@@ -1387,7 +1434,14 @@ const candidatSpeciaux2 = { mot: MOT_SPECIAUX2, element: motSpeciaux2El };
 
 function afficherChoixDifficulte() {
   ecranDifficulte.style.display = 'flex';
-  const candidats = [...candidatsDifficulte, candidatMajuscule, candidatAlt, candidatSpeciaux1, candidatSpeciaux2];
+  // Le thème ALT (caractères AltGr) n'a pas d'équivalent QWERTY standard : bouton masqué
+  // et retiré des candidats tapables pour ce mode (voir modeClavier).
+  const surAzerty = modeClavier === 'azerty';
+  motAltEl.style.display = surAzerty ? '' : 'none';
+  const candidatsThemes = surAzerty
+    ? [candidatMajuscule, candidatAlt, candidatSpeciaux1, candidatSpeciaux2]
+    : [candidatMajuscule, candidatSpeciaux1, candidatSpeciaux2];
+  const candidats = [...candidatsDifficulte, ...candidatsThemes];
   demarrerChoixPrompt(candidats, (choixMot) => {
     if (choixMot === MOT_MAJUSCULE) {
       afficherTutoMajuscule();
@@ -1570,7 +1624,7 @@ function lancerNiveauAlt() {
 // combinaison de touches, juste les caractères eux-mêmes qui flashent en jaune quand on
 // les tape (classe touche-maintenue, voir les écouteurs keydown/keyup plus haut).
 function construireExemplesSpeciaux1() {
-  exemplesSpeciaux1El.innerHTML = tableauS1.map(caractere => {
+  exemplesSpeciaux1El.innerHTML = tableauSpeciaux1Actif().map(caractere => {
     const echappee = echapperHtml(caractere);
     return `<span class="touche touche-caractere-speciaux1" data-caractere="${echappee}">${echappee}</span>`;
   }).join('');
@@ -1592,6 +1646,8 @@ function afficherTutoSpeciaux1() {
 // afficherChoixDifficulte, gère aussi bien le tout premier niveau de la partie
 // (choixDifficulteInitial) que l'enchaînement après une vague précédente.
 function lancerNiveauSpeciaux1() {
+  cycleSpeciaux1.mots = tableauSpeciaux1Actif();
+
   if (choixDifficulteInitial) {
     choixDifficulteInitial = false;
     demarrer(cycleSpeciaux1);
@@ -1599,7 +1655,7 @@ function lancerNiveauSpeciaux1() {
   }
 
   modeMajusculeNiveauActif = false;
-  motsActuels = tableauS1;
+  motsActuels = cycleSpeciaux1.mots;
   demarrerCycle(cycleSpeciaux1);
   jeuActif = true;
   const maintenant = performance.now();
@@ -1608,15 +1664,19 @@ function lancerNiveauSpeciaux1() {
   requestAnimationFrame(boucle);
 }
 
-// 10 exemples SHIFT + touche de base affichés dans le tuto SPECIAUX2 (voir
-// afficherTutoSpeciaux2), en 2 colonnes égales de 5. Même principe que les exemples
-// MAJUSCULE : bordure qui pulse tant que la touche est maintenue, et résultat affiché
-// après le "=" une fois Shift + la touche effectivement tapés (voir les écouteurs
-// keydown/keyup dédiés plus haut).
-const COLONNES_EXEMPLES_SPECIAUX2 = [
-  PAIRES_SPECIAUX2.slice(0, 5),
-  PAIRES_SPECIAUX2.slice(5)
-];
+// Exemples SHIFT + touche de base affichés dans le tuto SPECIAUX2 (voir
+// afficherTutoSpeciaux2 ; 10 paires en AZERTY, 21 en QWERTY). Même principe que les
+// exemples MAJUSCULE : bordure qui pulse tant que la touche est maintenue, et résultat
+// affiché après le "=" une fois Shift + la touche effectivement tapés (voir les
+// écouteurs keydown/keyup dédiés plus haut).
+// Répartit les paires actives (10 en AZERTY, 21 en QWERTY, voir pairesSpeciaux2Actives)
+// en colonnes égales : 2x5 en AZERTY, 3x7 en QWERTY.
+function colonnesExemplesSpeciaux2() {
+  const paires = pairesSpeciaux2Actives();
+  return modeClavier === 'azerty'
+    ? [paires.slice(0, 5), paires.slice(5)]
+    : [paires.slice(0, 7), paires.slice(7, 14), paires.slice(14)];
+}
 
 function ligneExempleSpeciaux2([base, resultat]) {
   const baseEchappee = echapperHtml(base);
@@ -1632,7 +1692,7 @@ function ligneExempleSpeciaux2([base, resultat]) {
 }
 
 function construireExemplesSpeciaux2() {
-  exemplesSpeciaux2El.innerHTML = COLONNES_EXEMPLES_SPECIAUX2.map(colonne => `
+  exemplesSpeciaux2El.innerHTML = colonnesExemplesSpeciaux2().map(colonne => `
     <div class="colonne-exemples-speciaux2">
       ${colonne.map(ligneExempleSpeciaux2).join('')}
     </div>
@@ -1656,6 +1716,8 @@ function afficherTutoSpeciaux2() {
 // afficherChoixDifficulte, gère aussi bien le tout premier niveau de la partie
 // (choixDifficulteInitial) que l'enchaînement après une vague précédente.
 function lancerNiveauSpeciaux2() {
+  cycleSpeciaux2.mots = tableauSpeciaux2Actif();
+
   if (choixDifficulteInitial) {
     choixDifficulteInitial = false;
     demarrer(cycleSpeciaux2);
@@ -1663,7 +1725,7 @@ function lancerNiveauSpeciaux2() {
   }
 
   modeMajusculeNiveauActif = false;
-  motsActuels = tableauS2;
+  motsActuels = cycleSpeciaux2.mots;
   demarrerCycle(cycleSpeciaux2);
   jeuActif = true;
   const maintenant = performance.now();
@@ -1698,38 +1760,66 @@ function retournerAuTitre() {
 }
 
 // Démarre l'écran titre (démo jouée par une IA) puis enchaîne les invites clavier
-// MENU -> (AVENTURE, SURVIE ou ENTRAINEMENT) -> COMMENCER avant de lancer la vraie partie.
+// MENU -> (AZERTY ou QWERTY) -> (AVENTURE, SURVIE ou ENTRAINEMENT) -> COMMENCER avant de
+// lancer la vraie partie. Redemande la disposition clavier à chaque passage par MENU
+// (retour au titre par inactivité ou fin de partie compris), pour permettre de la
+// changer sans recharger la page.
 function lancerSequenceMenu() {
   ecranTitre.style.display = 'flex';
   demarrerPrompt(MOT_MENU, motMenuEl, () => {
     ecranTitre.style.display = 'none';
-    ecranPopupMenu.style.display = 'flex';
-    dansPopupMenu = true;
-    planifierRetourDemo();
-
-    demarrerChoixPrompt(
-      [
-        { mot: MOT_AVENTURE, element: motAventureEl },
-        { mot: MOT_SURVIE, element: motSurvieEl },
-        { mot: MOT_ENTRAINEMENT, element: motEntrainementEl }
-      ],
-      (choix) => {
-        dansPopupMenu = false;
-        annulerRetourDemo();
-        ecranPopupMenu.style.display = 'none';
-
-        if (choix === MOT_AVENTURE) {
-          demarrerAventure();
-        } else if (choix === MOT_SURVIE) {
-          demarrerSurvie();
-        } else {
-          ecranDebut.style.display = 'flex';
-          demarrerPrompt(MOT_COMMENCER, motCommencerEl, lancerAvecChoixDifficulte);
-        }
-      }
-    );
+    afficherChoixClavier(afficherPopupMenu);
   }, true);
 }
 
+// Demande AZERTY ou QWERTY (voir lancerSequenceMenu) : met à jour modeClavier et son
+// rappel visuel (indicateurClavierEl) avant d'appeler callback.
+function afficherChoixClavier(callback) {
+  ecranClavier.style.display = 'flex';
+  demarrerChoixPrompt(
+    [
+      { mot: MOT_AZERTY, element: motAzertyEl },
+      { mot: MOT_QWERTY, element: motQwertyEl }
+    ],
+    (choix) => {
+      ecranClavier.style.display = 'none';
+      modeClavier = choix === MOT_AZERTY ? 'azerty' : 'qwerty';
+      majIndicateurClavier();
+      callback();
+    }
+  );
+}
+
+// Affiche le menu principal (AVENTURE / SURVIE / ENTRAINEMENT), une fois la disposition
+// clavier choisie (voir afficherChoixClavier).
+function afficherPopupMenu() {
+  ecranPopupMenu.style.display = 'flex';
+  dansPopupMenu = true;
+  planifierRetourDemo();
+
+  demarrerChoixPrompt(
+    [
+      { mot: MOT_AVENTURE, element: motAventureEl },
+      { mot: MOT_SURVIE, element: motSurvieEl },
+      { mot: MOT_ENTRAINEMENT, element: motEntrainementEl }
+    ],
+    (choix) => {
+      dansPopupMenu = false;
+      annulerRetourDemo();
+      ecranPopupMenu.style.display = 'none';
+
+      if (choix === MOT_AVENTURE) {
+        demarrerAventure();
+      } else if (choix === MOT_SURVIE) {
+        demarrerSurvie();
+      } else {
+        ecranDebut.style.display = 'flex';
+        demarrerPrompt(MOT_COMMENCER, motCommencerEl, lancerAvecChoixDifficulte);
+      }
+    }
+  );
+}
+
+majIndicateurClavier();
 demarrerDemo();
 lancerSequenceMenu();

@@ -9,6 +9,7 @@
   <div class="menu-retour">
     <a href="../index.html">← Retour aux jeux</a>
   </div>
+  <div id="indicateur-clavier" class="indicateur-clavier">AZERTY</div>
 
   <div class="container">
     <h1>Défense Anti-Météores</h1>
@@ -26,6 +27,15 @@
       <div id="ecran-titre" class="ecran ecran-transparent">
         <div class="mot-a-taper" id="mot-menu"></div>
         <p class="indice">Tapez ce mot au clavier pour continuer</p>
+      </div>
+
+      <div id="ecran-clavier" class="ecran ecran-popup" style="display:none;">
+        <h2>Quel est votre clavier ?</h2>
+        <p class="indice">Tapez le bouton correspondant à votre clavier</p>
+        <div class="choix-boutons">
+          <div class="bouton-menu" id="mot-azerty"></div>
+          <div class="bouton-menu" id="mot-qwerty"></div>
+        </div>
       </div>
 
       <div id="ecran-popup-menu" class="ecran ecran-popup" style="display:none;">

@@ -68,7 +68,12 @@
       <div id="ecran-difficulte" class="ecran" style="display:none;">
         <h2>Choisissez la difficulté</h2>
         <div class="choix-boutons" id="choix-difficulte"></div>
-        <div class="bouton-menu" id="mot-majuscule"></div>
+        <div class="choix-boutons">
+          <div class="bouton-menu" id="mot-majuscule"></div>
+          <div class="bouton-menu" id="mot-alt"></div>
+          <div class="bouton-menu" id="mot-speciaux1"></div>
+          <div class="bouton-menu" id="mot-speciaux2"></div>
+        </div>
       </div>
 
       <div id="ecran-tuto-majuscule" class="ecran" style="display:none;">
@@ -87,6 +92,40 @@
         <div class="exemples-majuscule" id="exemples-majuscule"></div>
         <p>Ou appuyez sur <strong>Verr. Maj</strong> : le voyant s'allume et toutes les lettres passent en majuscule jusqu'à ce que vous rappuyiez dessus.</p>
         <div class="bouton-menu" id="mot-continuer-majuscule"></div>
+        <p class="indice">Tapez CONTINUER pour lancer le niveau</p>
+      </div>
+
+      <div id="ecran-tuto-alt" class="ecran" style="display:none;">
+        <h2>Les caractères spéciaux</h2>
+        <svg class="schema-alt" viewBox="0 0 300 100" width="280" height="93" role="img" aria-label="Touche AltGr d'un clavier">
+          <rect x="90" y="15" width="120" height="60" rx="10" fill="#4e73df" />
+          <text x="150" y="45" text-anchor="middle" font-family="monospace" font-size="20" fill="#ffffff">⎇</text>
+          <text x="150" y="66" text-anchor="middle" font-family="monospace" font-size="12" font-weight="bold" fill="#ffffff">ALT GR</text>
+        </svg>
+        <p>Maintenez <strong>AltGr</strong> (à droite de la barre d'espace) puis appuyez sur la touche du caractère pour l'écrire.</p>
+        <div class="exemples-alt" id="exemples-alt"></div>
+        <div class="bouton-menu" id="mot-continuer-alt"></div>
+        <p class="indice">Tapez CONTINUER pour lancer le niveau</p>
+      </div>
+
+      <div id="ecran-tuto-speciaux1" class="ecran" style="display:none;">
+        <h2>Les caractères spéciaux 1</h2>
+        <p>Ces caractères s'écrivent directement, sans touche spéciale à maintenir.</p>
+        <div class="exemples-speciaux1" id="exemples-speciaux1"></div>
+        <div class="bouton-menu" id="mot-continuer-speciaux1"></div>
+        <p class="indice">Tapez CONTINUER pour lancer le niveau</p>
+      </div>
+
+      <div id="ecran-tuto-speciaux2" class="ecran" style="display:none;">
+        <h2>Les caractères spéciaux 2</h2>
+        <svg class="schema-speciaux2" viewBox="0 0 300 100" width="280" height="93" role="img" aria-label="Touche Shift d'un clavier">
+          <rect x="90" y="15" width="120" height="60" rx="10" fill="#4e73df" />
+          <text x="150" y="45" text-anchor="middle" font-family="monospace" font-size="20" fill="#ffffff">⇧</text>
+          <text x="150" y="66" text-anchor="middle" font-family="monospace" font-size="12" font-weight="bold" fill="#ffffff">SHIFT</text>
+        </svg>
+        <p>Maintenez <strong>Shift</strong> puis appuyez sur la touche du caractère de base pour écrire sa variante.</p>
+        <div class="exemples-speciaux2" id="exemples-speciaux2"></div>
+        <div class="bouton-menu" id="mot-continuer-speciaux2"></div>
         <p class="indice">Tapez CONTINUER pour lancer le niveau</p>
       </div>
 

@@ -29,6 +29,18 @@ const motMajusculeEl = document.getElementById('mot-majuscule');
 const ecranTutoMajuscule = document.getElementById('ecran-tuto-majuscule');
 const motContinuerMajusculeEl = document.getElementById('mot-continuer-majuscule');
 const exemplesMajusculeEl = document.getElementById('exemples-majuscule');
+const motAltEl = document.getElementById('mot-alt');
+const ecranTutoAlt = document.getElementById('ecran-tuto-alt');
+const motContinuerAltEl = document.getElementById('mot-continuer-alt');
+const exemplesAltEl = document.getElementById('exemples-alt');
+const motSpeciaux1El = document.getElementById('mot-speciaux1');
+const ecranTutoSpeciaux1 = document.getElementById('ecran-tuto-speciaux1');
+const motContinuerSpeciaux1El = document.getElementById('mot-continuer-speciaux1');
+const exemplesSpeciaux1El = document.getElementById('exemples-speciaux1');
+const motSpeciaux2El = document.getElementById('mot-speciaux2');
+const ecranTutoSpeciaux2 = document.getElementById('ecran-tuto-speciaux2');
+const motContinuerSpeciaux2El = document.getElementById('mot-continuer-speciaux2');
+const exemplesSpeciaux2El = document.getElementById('exemples-speciaux2');
 const ecranFin = document.getElementById('ecran-fin');
 const titreFinEl = document.getElementById('titre-fin');
 const scoreFinalEl = document.getElementById('score-final');
@@ -163,6 +175,36 @@ const tableauM = [
   'Astre', 'ORBITE', 'Cosmos', 'GALAXIE', 'Planete'
 ];
 
+// Niveau tuto ALT de l'Entraînement (voir afficherTutoAlt) : les caractères spéciaux
+// qui s'écrivent avec AltGr, un par comète. ~ et ` (AltGr+2/7) sont exclus : ce sont des
+// touches mortes AZERTY qui ne se reconnaissent pas de façon fiable au clavier de tous
+// les visiteurs (voir conversation).
+const tableauA = ['#', '{', '[', '|', '\\', '^', '@', ']', '}', '¤', '€'];
+
+// Niveaux tuto SPECIAUX1 (sans touche spéciale) / SPECIAUX2 (Shift + la même touche)
+// de l'Entraînement : le reste du clavier AZERTY, un caractère par comète.
+const tableauS1 = ['&', 'é', '"', "'", '(', '-', 'è', '_', 'ç', 'à', ')', '=', '^', '$', '*', 'ù', '!', ',', ';', ':'];
+const tableauS2 = ['°', '+', '¨', '£', 'µ', '%', '§', '/', '.', '?'];
+
+// Paires touche de base -> résultat avec Shift, pour les exemples du tuto SPECIAUX2 :
+// les touches de tableauS1 dont le Shift donne un caractère spécial (pas un chiffre).
+const PAIRES_SPECIAUX2 = [
+  [')', '°'], ['=', '+'], ['^', '¨'], ['$', '£'], ['*', 'µ'],
+  ['ù', '%'], ['!', '§'], [',', '?'], [';', '.'], [':', '/']
+];
+
+// Deux touches mortes AZERTY (première pression sans effet visible : e.key vaut 'Dead',
+// en attente d'une touche suivante pour "libérer" le caractère) : AltGr+9 (^, thème ALT)
+// et la touche ^ ¨ dédiée, sans AltGr (^ sans Shift, ¨ avec Shift ; thèmes SPECIAUX1/2).
+// On les reconnaît directement via la touche physique (e.code, stable même quand
+// e.key vaut 'Dead') pour ne pas obliger à taper une touche de plus.
+function caractereReel(e) {
+  if (e.key !== 'Dead') return e.key;
+  if (e.code === 'Digit9') return '^';
+  if (e.code === 'BracketLeft') return e.shiftKey ? '¨' : '^';
+  return null;
+}
+
 // Mots du mode Aventure : un tableau par étape, à remplir/corriger à la main.
 // Convention de nommage : tableauN = Niveau N, tableauNn = le tuto qui suit
 // le Niveau N (ex. tableau1n = tuto "Shift + MAJ" entre Niveau 1 et Niveau 2).
@@ -272,6 +314,15 @@ const cycles = [
 // s'appuie sur cycle.mots quand il est présent).
 const cycleMajuscule = { nom: 'Majuscule', intervalSpawn: 4000, mots: tableauM };
 
+// Niveau tuto ALT de l'Entraînement (voir afficherTutoAlt/lancerNiveauAlt) : un seul
+// passage sur tout tableauA.
+const cycleAlt = { nom: 'Alt', intervalSpawn: 4000, mots: tableauA };
+
+// Niveaux tuto SPECIAUX1/SPECIAUX2 de l'Entraînement : un seul passage sur tout
+// tableauS1, respectivement tableauS2 (voir afficherTutoSpeciaux1/2).
+const cycleSpeciaux1 = { nom: 'Spéciaux1', intervalSpawn: 3000, mots: tableauS1 };
+const cycleSpeciaux2 = { nom: 'Spéciaux2', intervalSpawn: 3000, mots: tableauS2 };
+
 let roches = [];
 let projectiles = [];
 let particules = [];
@@ -310,6 +361,17 @@ let cycleSurvieCompte = 0;
 let modeMajusculeNiveauActif = false;
 const MOT_MAJUSCULE = 'MAJUSCULE';
 const MOT_CONTINUER = 'CONTINUER';
+
+// Thème ALT de l'écran de difficulté (mode Entraînement) : même principe que MAJUSCULE,
+// mais pour les caractères spéciaux qui s'écrivent avec AltGr (voir afficherTutoAlt).
+// Pas besoin d'un flag de casse ici : tableauA ne contient que des symboles, insensibles
+// à toLowerCase().
+const MOT_ALT = 'ALT';
+
+// Thèmes SPECIAUX1/SPECIAUX2 de l'écran de difficulté : le reste du clavier AZERTY,
+// sans touche spéciale pour SPECIAUX1, avec Shift pour SPECIAUX2 (voir afficherTutoSpeciaux1/2).
+const MOT_SPECIAUX1 = 'SPECIAUX1';
+const MOT_SPECIAUX2 = 'SPECIAUX2';
 
 // Le tout premier météore d'une partie réelle arrive plus tôt (0.5s) et tombe
 // plus lentement, histoire de laisser le temps de s'installer. Les suivants
@@ -533,7 +595,9 @@ function demarrer(indexCycleDepart = premierCycleActif()) {
   modeAventureActif = false;
   modeSurvieActif = false;
   modeMajusculeNiveauActif = indexCycleDepart === cycleMajuscule;
-  motsActuels = modeMajusculeNiveauActif ? tableauM : mots;
+  // Les niveaux tuto (Majuscule, Alt...) portent leur propre vocabulaire dans .mots,
+  // comme une étape de l'Aventure ; sinon on reste sur le vocabulaire générique.
+  motsActuels = (typeof indexCycleDepart !== 'number' && indexCycleDepart.mots) ? indexCycleDepart.mots : mots;
   vitesseBase = 40;
   secousse = 0;
   vaguesTerminees = 0;
@@ -1187,8 +1251,98 @@ window.addEventListener('keyup', (e) => {
   document.querySelectorAll(`.touche-lettre[data-lettre="${lettre}"]`).forEach(el => el.classList.remove('touche-maintenue'));
 });
 
+// Retour visuel du tuto ALT (voir construireExemplesAlt), même principe que le tuto
+// MAJUSCULE ci-dessus mais pour AltGr + un caractère de tableauA. caractereReel()
+// résout la touche morte AZERTY ^ (voir plus haut). Comparaison sur el.dataset
+// (pas de sélecteur CSS avec la valeur du caractère) : certains caractères de tableauA
+// (ex: \) casseraient un sélecteur `[data-caractere="${touche}"]`.
 window.addEventListener('keydown', (e) => {
-  if (e.key.length !== 1) return;
+  if (e.key === 'AltGraph') {
+    document.querySelectorAll('.touche-altgr').forEach(el => el.classList.add('touche-maintenue'));
+    return;
+  }
+
+  const touche = caractereReel(e);
+  if (!touche || !tableauA.includes(touche)) return;
+
+  document.querySelectorAll('.touche-caractere-alt').forEach(el => {
+    if (el.dataset.caractere === touche) el.classList.add('touche-maintenue');
+  });
+  // Caractère effectivement obtenu (AltGr + touche) : affiche le résultat après le "=".
+  document.querySelectorAll('.resultat-alt').forEach(el => {
+    if (el.dataset.caractere === touche) el.textContent = touche;
+  });
+});
+
+window.addEventListener('keyup', (e) => {
+  if (e.key === 'AltGraph') {
+    document.querySelectorAll('.touche-altgr').forEach(el => el.classList.remove('touche-maintenue'));
+    return;
+  }
+
+  const touche = caractereReel(e);
+  if (!touche || !tableauA.includes(touche)) return;
+  document.querySelectorAll('.touche-caractere-alt').forEach(el => {
+    if (el.dataset.caractere === touche) el.classList.remove('touche-maintenue');
+  });
+});
+
+// Retour visuel du tuto SPECIAUX1 (voir construireExemplesSpeciaux1) : pas de touche
+// spéciale à surveiller, juste un flash sur la touche pressée pour confirmer la frappe.
+window.addEventListener('keydown', (e) => {
+  const touche = caractereReel(e);
+  if (!touche || !tableauS1.includes(touche)) return;
+  document.querySelectorAll('.touche-caractere-speciaux1').forEach(el => {
+    if (el.dataset.caractere === touche) el.classList.add('touche-maintenue');
+  });
+});
+
+window.addEventListener('keyup', (e) => {
+  const touche = caractereReel(e);
+  if (!touche || !tableauS1.includes(touche)) return;
+  document.querySelectorAll('.touche-caractere-speciaux1').forEach(el => {
+    if (el.dataset.caractere === touche) el.classList.remove('touche-maintenue');
+  });
+});
+
+// Retour visuel du tuto SPECIAUX2 (voir construireExemplesSpeciaux2), même principe que
+// le tuto MAJUSCULE (la touche SHIFT elle-même pulse déjà via .touche-shift, voir plus
+// haut) : chaque paire touche/résultat de PAIRES_SPECIAUX2 est reconnue sur sa touche de
+// base (pressée sans Shift) comme sur son résultat (pressée avec Shift, qui déclenche
+// aussi l'affichage après le "=").
+window.addEventListener('keydown', (e) => {
+  const touche = caractereReel(e);
+  if (!touche) return;
+  const paire = PAIRES_SPECIAUX2.find(([base, resultat]) => touche === base || touche === resultat);
+  if (!paire) return;
+  const [base, resultat] = paire;
+
+  document.querySelectorAll('.touche-caractere-speciaux2').forEach(el => {
+    if (el.dataset.caractere === base) el.classList.add('touche-maintenue');
+  });
+  if (touche === resultat) {
+    document.querySelectorAll('.resultat-alt').forEach(el => {
+      if (el.dataset.caractere === base) el.textContent = resultat;
+    });
+  }
+});
+
+window.addEventListener('keyup', (e) => {
+  const touche = caractereReel(e);
+  if (!touche) return;
+  const paire = PAIRES_SPECIAUX2.find(([base, resultat]) => touche === base || touche === resultat);
+  if (!paire) return;
+  document.querySelectorAll('.touche-caractere-speciaux2').forEach(el => {
+    if (el.dataset.caractere === paire[0]) el.classList.remove('touche-maintenue');
+  });
+});
+
+window.addEventListener('keydown', (e) => {
+  // caractereReel() résout la touche morte AZERTY ^ (niveau tuto ALT) : sans ça,
+  // e.key vaut 'Dead' sur sa première frappe et cette comète serait impossible à
+  // détruire (filtrée par la vérification de longueur juste en dessous).
+  const touche = caractereReel(e);
+  if (!touche || touche.length !== 1) return;
 
   // Débloque le contexte audio dès la 1ère touche pressée (contrainte des
   // navigateurs : le son ne peut démarrer que suite à une interaction).
@@ -1201,16 +1355,16 @@ window.addEventListener('keydown', (e) => {
 
   if (promptCandidats.length) {
     // Choix binaire au clavier (ex: écran "Continuer ? OUI / NON")
-    traiterLettreChoix(e.key);
+    traiterLettreChoix(touche);
   } else if (motPromptActuel) {
     // Navigation clavier dans les écrans démo/menus (MENU, ENTRAINEMENT, COMMENCER)
-    traiterLettrePrompt(e.key);
+    traiterLettrePrompt(touche);
   } else if (!modeDemo && jeuActif) {
     // Partie réelle en cours : la frappe vise/détruit les météores.
     // En Aventure, en Survie et sur le niveau tuto MAJUSCULE, la casse compte
     // (mots contenant des majuscules) ; sur le reste de l'Entraînement, tout est
     // en minuscules donc on reste insensible à la casse.
-    traiterLettreMeteore((modeAventureActif || modeSurvieActif || modeMajusculeNiveauActif) ? e.key : e.key.toLowerCase());
+    traiterLettreMeteore((modeAventureActif || modeSurvieActif || modeMajusculeNiveauActif) ? touche : touche.toLowerCase());
   }
 });
 
@@ -1221,16 +1375,34 @@ const candidatsDifficulte = construireChoixClavier(
   cycles.filter(c => c.actif).map(c => c.nom.toUpperCase())
 );
 
-// Bouton MAJUSCULE (thème de l'écran de difficulté) : contrairement aux candidats
-// de difficulté, il ne lance pas directement un niveau mais ouvre le tuto (voir
-// afficherChoixDifficulte / afficherTutoMajuscule).
+// Boutons MAJUSCULE, ALT, SPECIAUX1 et SPECIAUX2 (thèmes de l'écran de difficulté) :
+// contrairement aux candidats de difficulté, ils ne lancent pas directement un niveau
+// mais ouvrent leur tuto (voir afficherChoixDifficulte / afficherTutoXxx). SPECIAUX1 et
+// SPECIAUX2 ne partagent que leur préfixe "SPECIAUX" : demarrerChoixPrompt les distingue
+// par la dernière lettre tapée (voir traiterLettreChoix, plus haut).
 const candidatMajuscule = { mot: MOT_MAJUSCULE, element: motMajusculeEl };
+const candidatAlt = { mot: MOT_ALT, element: motAltEl };
+const candidatSpeciaux1 = { mot: MOT_SPECIAUX1, element: motSpeciaux1El };
+const candidatSpeciaux2 = { mot: MOT_SPECIAUX2, element: motSpeciaux2El };
 
 function afficherChoixDifficulte() {
   ecranDifficulte.style.display = 'flex';
-  demarrerChoixPrompt([...candidatsDifficulte, candidatMajuscule], (choixMot) => {
+  const candidats = [...candidatsDifficulte, candidatMajuscule, candidatAlt, candidatSpeciaux1, candidatSpeciaux2];
+  demarrerChoixPrompt(candidats, (choixMot) => {
     if (choixMot === MOT_MAJUSCULE) {
       afficherTutoMajuscule();
+      return;
+    }
+    if (choixMot === MOT_ALT) {
+      afficherTutoAlt();
+      return;
+    }
+    if (choixMot === MOT_SPECIAUX1) {
+      afficherTutoSpeciaux1();
+      return;
+    }
+    if (choixMot === MOT_SPECIAUX2) {
+      afficherTutoSpeciaux2();
       return;
     }
 
@@ -1257,6 +1429,14 @@ function afficherChoixDifficulte() {
   });
 }
 
+// Échappe un caractère avant de l'insérer dans un data-attribute ou le contenu d'un
+// template HTML (voir ligneExempleMajuscule/Alt/Speciaux2, construireExemplesSpeciaux1) :
+// un caractère brut comme " casserait l'attribut data-caractere="${caractere}" en
+// refermant la valeur en plein milieu (c'est ce qui rendait " introuvable dans SPECIAUX1).
+function echapperHtml(caractere) {
+  return caractere.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 // 6 exemples SHIFT + lettre affichés dans le tuto (voir afficherTutoMajuscule), en deux
 // colonnes égales de 3 : I/A/Z à gauche, C/H/W à droite. Les bordures des touches
 // SHIFT/lettre pulsent (classe touche-maintenue, voir les écouteurs keydown/keyup sur
@@ -1269,13 +1449,14 @@ const COLONNES_EXEMPLES_MAJUSCULE = [
 const LETTRES_EXEMPLES_MAJUSCULE = COLONNES_EXEMPLES_MAJUSCULE.flat();
 
 function ligneExempleMajuscule(lettre) {
+  const echappee = echapperHtml(lettre);
   return `
     <div class="exemple-majuscule">
       <span class="touche touche-shift">⇧<br>SHIFT</span>
       <span class="touche-plus">+</span>
-      <span class="touche touche-lettre" data-lettre="${lettre}">${lettre}</span>
+      <span class="touche touche-lettre" data-lettre="${echappee}">${echappee}</span>
       <span class="touche-egal">=</span>
-      <span class="resultat-majuscule" data-lettre="${lettre}"></span>
+      <span class="resultat-majuscule" data-lettre="${echappee}"></span>
     </div>
   `;
 }
@@ -1314,6 +1495,176 @@ function lancerNiveauMajuscule() {
   modeMajusculeNiveauActif = true;
   motsActuels = tableauM;
   demarrerCycle(cycleMajuscule);
+  jeuActif = true;
+  const maintenant = performance.now();
+  dernierSpawn = maintenant;
+  dernierFrame = maintenant;
+  requestAnimationFrame(boucle);
+}
+
+// 11 exemples ALT GR + caractère (tout tableauA) affichés dans le tuto ALT (voir
+// afficherTutoAlt), répartis en 3 colonnes à peu près égales. Même principe que les
+// exemples MAJUSCULE : bordure qui pulse tant que la touche est maintenue (classe
+// touche-maintenue, voir les écouteurs keydown/keyup sur 'AltGraph' plus haut), et
+// caractère obtenu affiché après le "=" une fois AltGr + la touche effectivement tapés.
+const COLONNES_EXEMPLES_ALT = [
+  tableauA.slice(0, 4),
+  tableauA.slice(4, 8),
+  tableauA.slice(8)
+];
+
+function ligneExempleAlt(caractere) {
+  const echappee = echapperHtml(caractere);
+  return `
+    <div class="exemple-alt">
+      <span class="touche touche-altgr">⎇<br>ALT GR</span>
+      <span class="touche-plus">+</span>
+      <span class="touche touche-caractere-alt" data-caractere="${echappee}">${echappee}</span>
+      <span class="touche-egal">=</span>
+      <span class="resultat-alt" data-caractere="${echappee}"></span>
+    </div>
+  `;
+}
+
+function construireExemplesAlt() {
+  exemplesAltEl.innerHTML = COLONNES_EXEMPLES_ALT.map(colonne => `
+    <div class="colonne-exemples-alt">
+      ${colonne.map(ligneExempleAlt).join('')}
+    </div>
+  `).join('');
+}
+
+// Tuto ALT : petit schéma clavier (AltGr) + explication, avant de lancer le niveau
+// dédié (tableauA). Se ferme en tapant CONTINUER, comme les autres écrans de passage.
+function afficherTutoAlt() {
+  ecranDifficulte.style.display = 'none';
+  ecranTutoAlt.style.display = 'flex';
+  construireExemplesAlt();
+  demarrerPrompt(MOT_CONTINUER, motContinuerAltEl, () => {
+    ecranTutoAlt.style.display = 'none';
+    lancerNiveauAlt();
+  });
+}
+
+// Lance le niveau tuto ALT (un seul passage sur tableauA). Comme afficherChoixDifficulte,
+// gère aussi bien le tout premier niveau de la partie (choixDifficulteInitial) que
+// l'enchaînement après une vague précédente.
+function lancerNiveauAlt() {
+  if (choixDifficulteInitial) {
+    choixDifficulteInitial = false;
+    demarrer(cycleAlt);
+    return;
+  }
+
+  modeMajusculeNiveauActif = false;
+  motsActuels = tableauA;
+  demarrerCycle(cycleAlt);
+  jeuActif = true;
+  const maintenant = performance.now();
+  dernierSpawn = maintenant;
+  dernierFrame = maintenant;
+  requestAnimationFrame(boucle);
+}
+
+// tableauS1 affiché en vrac dans le tuto SPECIAUX1 (voir afficherTutoSpeciaux1) : pas de
+// combinaison de touches, juste les caractères eux-mêmes qui flashent en jaune quand on
+// les tape (classe touche-maintenue, voir les écouteurs keydown/keyup plus haut).
+function construireExemplesSpeciaux1() {
+  exemplesSpeciaux1El.innerHTML = tableauS1.map(caractere => {
+    const echappee = echapperHtml(caractere);
+    return `<span class="touche touche-caractere-speciaux1" data-caractere="${echappee}">${echappee}</span>`;
+  }).join('');
+}
+
+// Tuto SPECIAUX1 : la liste des caractères, sans schéma clavier (aucune touche spéciale
+// à maintenir). Se ferme en tapant CONTINUER, comme les autres écrans de passage.
+function afficherTutoSpeciaux1() {
+  ecranDifficulte.style.display = 'none';
+  ecranTutoSpeciaux1.style.display = 'flex';
+  construireExemplesSpeciaux1();
+  demarrerPrompt(MOT_CONTINUER, motContinuerSpeciaux1El, () => {
+    ecranTutoSpeciaux1.style.display = 'none';
+    lancerNiveauSpeciaux1();
+  });
+}
+
+// Lance le niveau tuto SPECIAUX1 (un seul passage sur tableauS1). Comme
+// afficherChoixDifficulte, gère aussi bien le tout premier niveau de la partie
+// (choixDifficulteInitial) que l'enchaînement après une vague précédente.
+function lancerNiveauSpeciaux1() {
+  if (choixDifficulteInitial) {
+    choixDifficulteInitial = false;
+    demarrer(cycleSpeciaux1);
+    return;
+  }
+
+  modeMajusculeNiveauActif = false;
+  motsActuels = tableauS1;
+  demarrerCycle(cycleSpeciaux1);
+  jeuActif = true;
+  const maintenant = performance.now();
+  dernierSpawn = maintenant;
+  dernierFrame = maintenant;
+  requestAnimationFrame(boucle);
+}
+
+// 10 exemples SHIFT + touche de base affichés dans le tuto SPECIAUX2 (voir
+// afficherTutoSpeciaux2), en 2 colonnes égales de 5. Même principe que les exemples
+// MAJUSCULE : bordure qui pulse tant que la touche est maintenue, et résultat affiché
+// après le "=" une fois Shift + la touche effectivement tapés (voir les écouteurs
+// keydown/keyup dédiés plus haut).
+const COLONNES_EXEMPLES_SPECIAUX2 = [
+  PAIRES_SPECIAUX2.slice(0, 5),
+  PAIRES_SPECIAUX2.slice(5)
+];
+
+function ligneExempleSpeciaux2([base, resultat]) {
+  const baseEchappee = echapperHtml(base);
+  return `
+    <div class="exemple-alt">
+      <span class="touche touche-shift">⇧<br>SHIFT</span>
+      <span class="touche-plus">+</span>
+      <span class="touche touche-caractere-speciaux2" data-caractere="${baseEchappee}">${baseEchappee}</span>
+      <span class="touche-egal">=</span>
+      <span class="resultat-alt" data-caractere="${baseEchappee}"></span>
+    </div>
+  `;
+}
+
+function construireExemplesSpeciaux2() {
+  exemplesSpeciaux2El.innerHTML = COLONNES_EXEMPLES_SPECIAUX2.map(colonne => `
+    <div class="colonne-exemples-speciaux2">
+      ${colonne.map(ligneExempleSpeciaux2).join('')}
+    </div>
+  `).join('');
+}
+
+// Tuto SPECIAUX2 : petit schéma clavier (Shift, sans Verr. Maj qui n'affecte pas la
+// ponctuation) + explication, avant de lancer le niveau dédié (tableauS2). Se ferme en
+// tapant CONTINUER, comme les autres écrans de passage.
+function afficherTutoSpeciaux2() {
+  ecranDifficulte.style.display = 'none';
+  ecranTutoSpeciaux2.style.display = 'flex';
+  construireExemplesSpeciaux2();
+  demarrerPrompt(MOT_CONTINUER, motContinuerSpeciaux2El, () => {
+    ecranTutoSpeciaux2.style.display = 'none';
+    lancerNiveauSpeciaux2();
+  });
+}
+
+// Lance le niveau tuto SPECIAUX2 (un seul passage sur tableauS2). Comme
+// afficherChoixDifficulte, gère aussi bien le tout premier niveau de la partie
+// (choixDifficulteInitial) que l'enchaînement après une vague précédente.
+function lancerNiveauSpeciaux2() {
+  if (choixDifficulteInitial) {
+    choixDifficulteInitial = false;
+    demarrer(cycleSpeciaux2);
+    return;
+  }
+
+  modeMajusculeNiveauActif = false;
+  motsActuels = tableauS2;
+  demarrerCycle(cycleSpeciaux2);
   jeuActif = true;
   const maintenant = performance.now();
   dernierSpawn = maintenant;
